@@ -1,0 +1,19 @@
+// void setup(): This function initializes the hardware and software components required for the program to work correctly. It sets up the TFT display, Wi-Fi connection, Firebase connection, HDC1080 temperature and humidity sensor, relay, and servo motor.
+
+// void loop(): This function continuously runs the main program loop. It fetches the device name and desired status from the Firebase database, updates the TFT display with temperature and humidity readings, and performs necessary actions based on the Firebase data.
+
+// void errorWithCode(String errorCode): This function displays an error message on the TFT screen with a specific error code. The error code helps users to identify the issue by referring to the documentation.
+
+// void syncIncubator(bool desiredStatus): This function updates the incubator's active status in the Firebase database based on the desiredStatus parameter received from the client-side.
+
+// int tempFromDb(): This function retrieves the desired temperature from the Firebase database and returns the value. If there's an error fetching the value, it returns -500 and displays an error message on the TFT screen.
+
+// int humFromDb(): This function retrieves the desired humidity from the Firebase database and returns the value. If there's an error fetching the value, it returns -500 and displays an error message on the TFT screen.
+
+// void sendToDatabase(int t, int h): This function sends the current temperature (t) and humidity (h) readings to the Firebase database. If there's an error updating the values, it displays an error message on the TFT screen.
+
+// void relayControl(int t, int tempDb): This function controls the relay based on the current temperature (t) and desired temperature (tempDb). If the current temperature is greater than or equal to the desired temperature, it turns the heater off; otherwise, it turns the heater on.
+
+// void servoControl(int h, int humidityDb): This function controls the servo motor based on the current humidity (h) and desired humidity (humidityDb). If the current humidity is greater than the desired humidity, it opens the ventilation; otherwise, it closes the ventilation.
+
+// void errorLcd(): This function displays a "DB ERROR" message on the TFT screen and instructs the user to check the log for more information when there's an error related to the Firebase database.

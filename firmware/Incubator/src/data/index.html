@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ESP32 S3 Incubator Control</title>
+  <style>
+    body {font-family: Arial, sans-serif; text-align: center;}
+    input[type="number"] {width: 50%;}
+  </style>
+</head>
+<body>
+  <h1>ESP32 S3 Incubator Control</h1>
+  <form id="settingsForm" onsubmit="updateSettings(event)">
+    <label for="temp">Temperature:</label>
+    <input type="number" id="temp" name="temp">
+    <br>
+    <label for="hum">Humidity:</label>
+    <input type="number" id="hum" name="hum">
+    <br>
+    <button type="submit">Update Settings</button>
+  </form>
+  <button onclick="toggleIncubator()">Toggle Incubator</button>
+  <p id="incubatorStatus">Status: Unknown</p>
+  <br>
+  <button onclick="fetchData()">Fetch Data</button>
+  <br>
+  <textarea id="dataTextArea" rows="10" cols="30" readonly></textarea>
+  <script>
+  function updateSettings(event) {
+    event.preventDefault();
+    const temp = document.getElementById('temp').value;
+    const hum = document.getElementById('hum').value;
+    
+    console.log('updateSettings called with temp:', temp, 'hum:', hum);
+
+    fetch(`/updateSettings?temp=${temp}&hum=${hum}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.text();
+      })
+      .then(data => {
+        console.log('Settings update response:', data);
+      })
+      .catch(error => {
+        console.error('There was a problem with the fetch operation:', error);
+      });
+  }
+
+  function toggleIncubator() {
+      fetch('/toggleIncubator')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          const status = data.status ? 'Active' : 'Inactive';
+          document.getElementById('incubatorStatus').innerText = 'Status: ' + status;
+        })
+        .catch(error => {
+          console.error('There was a problem with the fetch operation:', error);
+        });
+    }
+
+    function fetchData() {
+      fetch('/fetchData')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.text();
+        })
+        .then(data => {
+          document.getElementById('dataTextArea').innerText = data;
+        })
+        .catch(error => {
+          console.error('There was a problem with the fetch operation:', error);
+        });
+    }
+  </script>
+</body>
+</html>
