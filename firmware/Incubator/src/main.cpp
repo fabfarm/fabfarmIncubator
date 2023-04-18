@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <Wire.h>
-#include <DHT.h> // Include DHT library instead of ClosedCube_HDC1080.h
+#include <DHT.h>
+#include <Adafruit_BME280.h>
 #include <WiFi.h>
 #include <math.h>
 #include <ESP32Servo.h>
@@ -41,10 +42,26 @@ int16_t w = 160;
 
 int dly = 10;
 
-// Define DHT11 sensor type and pin
-#define DHTTYPE DHT11
+//Define DHT11 sensor type and pin
+//#define SENSOR_DHT11
+#define SENSOR_BME280
+
 #define DHTPIN 39
 DHT dht(DHTPIN, DHTTYPE);
+
+#ifdef SENSOR_DHT11
+  #define DHTTYPE DHT11
+  #define DHTPIN 39
+  DHT dht(DHTPIN, DHTTYPE);
+#elif defined(SENSOR_BME280)
+  #define BME_SDA 33
+  #define BME_SCL 34
+  Adafruit_BME280 bme;
+  TwoWire I2CBME = TwoWire(0);
+#endif
+
+
+
 
 int humSensor = 0;
 int tempSensor = 0;
@@ -89,27 +106,44 @@ void setup() {
   AsyncElegantOTA.begin(&server); // Default values: username = "admin", password = "admin", port = 80, hostname = "elegant_ota", mdns_name = "elegant-ota", mdns_enabled = true
   delay(2000);
   servoConect();
-  dht.begin(); // Initialize the DHT11 sensor
+
+  // Initialize the sensor based on the selected type
+  #ifdef SENSOR_DHT11
+    dht.begin();
+  #elif defined(SENSOR_BME280)
+    I2CBME.begin(BME_SDA, BME_SCL);
+    if (!bme.begin(0x76, &I2CBME)) {
+      Serial.println("Could not find a valid BME280 sensor, check wiring!");
+      while (1);
+    }
+  #endif
+
   tft.fillScreen(BLACK);
 }
 
 void loop() {
-  bool desiredStatus = getDesiredStatus(); // Assuming the incubator should be active by default
+  bool desiredStatus = getDesiredStatus();
   tempDb = tempFromDb();
   humDb = humFromDb();
   if (desiredStatus) {
-    tempSensor = round(dht.readTemperature()); // Read temperature from DHT11 sensor
-    humSensor = round(dht.readHumidity()); // Read humidity from DHT11 sensor
+    // Read temperature and humidity from the selected sensor
+    #ifdef SENSOR_DHT11
+      tempSensor = round(dht.readTemperature());
+      humSensor = round(dht.readHumidity());
+    #elif defined(SENSOR_BME280)
+      tempSensor = round(bme.readTemperature());
+      humSensor = round(bme.readHumidity());
+    #endif
+
     relayControl(tempSensor, tempDb);
     servoControl(humSensor, humDb);
     updateDisplay();
     sendToDatabase(tempSensor, humSensor);
-  
   } else {
     tft.fillScreen(BLACK);
     tft.setCursor(0, 0);
     tft.print("SYSTEM PAUSED");
-    digitalWrite(relayPin, OFF); // HEATER OFF
+    digitalWrite(relayPin, OFF);
     myservo.write(200);
   }
 }
@@ -292,7 +326,7 @@ void sendToDatabase(int tempSensor, int humSensor) {
     return;
   }
 
-  file.println("///" + String(tempSensor) + "," + String(humSensor));
+  file.println("   " + String(tempSensor) + "," + String(humSensor));
   file.close();
 
   Serial.println("Data saved to SPIFFS");
