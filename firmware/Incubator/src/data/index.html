@@ -13,7 +13,7 @@
   <h1>ESP32 S3 Incubator Control</h1>
   <form id="settingsForm" onsubmit="updateSettings(event)">
     <label for="temp">Temperature:</label>
-    <input type="number" id="temp" name="temp">
+    <input type="number" id="temp" name="temp" step="0.01">
     <br>
     <label for="hum">Humidity:</label>
     <input type="number" id="hum" name="hum">
@@ -26,30 +26,32 @@
   <button onclick="fetchData()">Fetch Data</button>
   <br>
   <textarea id="dataTextArea" rows="10" cols="30" readonly></textarea>
+  <br>
+  <p id="sensorData">Temperature: N/A °C | Humidity: N/A %</p>
   <script>
-  function updateSettings(event) {
-    event.preventDefault();
-    const temp = document.getElementById('temp').value;
-    const hum = document.getElementById('hum').value;
-    
-    console.log('updateSettings called with temp:', temp, 'hum:', hum);
+    function updateSettings(event) {
+      event.preventDefault();
+      const temp = document.getElementById('temp').value;
+      const hum = document.getElementById('hum').value;
 
-    fetch(`/updateSettings?temp=${temp}&hum=${hum}`)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.text();
-      })
-      .then(data => {
-        console.log('Settings update response:', data);
-      })
-      .catch(error => {
-        console.error('There was a problem with the fetch operation:', error);
-      });
-  }
+      console.log('updateSettings called with temp:', temp, 'hum:', hum);
 
-  function toggleIncubator() {
+      fetch(`/updateSettings?temp=${temp}&hum=${hum}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.text();
+        })
+        .then(data => {
+          console.log('Settings update response:', data);
+        })
+        .catch(error => {
+          console.error('There was a problem with the fetch operation:', error);
+        });
+    }
+
+    function toggleIncubator() {
       fetch('/toggleIncubator')
         .then(response => {
           if (!response.ok) {
@@ -81,6 +83,31 @@
           console.error('There was a problem with the fetch operation:', error);
         });
     }
+
+    function fetchSensorData() {
+      fetch('/getSensorData')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          document.getElementById('sensorData').innerText = `Temperature: ${data.temperature.toFixed(1)} °C | Humidity: ${data.humidity.toFixed(1)} %`;
+        })
+        .catch(error => {
+          console.error('There was a problem with the fetch operation:', error);
+        });
+    }
+
+    function startSensorDataUpdate(interval) {
+      setInterval(() => {
+        fetchSensorData();
+      }, interval);
+    }
+
+    // Start updating sensor data every 5 seconds (5000 milliseconds)
+    startSensorDataUpdate(5000);
   </script>
 </body>
 </html>

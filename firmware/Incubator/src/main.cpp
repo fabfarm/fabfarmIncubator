@@ -46,9 +46,6 @@ int dly = 10;
 //#define SENSOR_DHT11
 #define SENSOR_BME280
 
-#define DHTPIN 39
-DHT dht(DHTPIN, DHTTYPE);
-
 #ifdef SENSOR_DHT11
   #define DHTTYPE DHT11
   #define DHTPIN 39
@@ -60,14 +57,16 @@ DHT dht(DHTPIN, DHTTYPE);
   TwoWire I2CBME = TwoWire(0);
 #endif
 
-
-
-
 int humSensor = 0;
-int tempSensor = 0;
-int tempDb = 0;
+float tempSensor = 0.0;
+float tempDb = 0.0;
 int humDb = 0;
 bool wasNotFound = false;
+// Define the range of acceptable values
+float tempMin = 0.0; // minimum temperature in Celsius (change as needed)
+float tempMax = 100.0; // maximum temperature in Celsius (change as needed)
+float humMin = 0.0;  // minimum humidity in percent (change as needed)
+float humMax = 100.0;  // maximum humidity in percent (change as needed)
 
 #define TTL_Logic_Low
 // Included option to use relays with TTL Logic LOW. Comment to use high
@@ -82,13 +81,13 @@ bool wasNotFound = false;
 // initialise each function
 void setupStorage();
 void errorLcd();
-void relayControl(int tempSensor, int tempDb);
+void relayControl(float tempSensor, float tempDb);
 void servoControl(int humSensor, int humDb);
-void sendToDatabase(int tempSensor, int humSensor);
+void sendToDatabase(float tempSensor, int humSensor);
 void errorWithCode(String errorCode);
 void syncIncubator(bool desiredStatus);
-int tempFromDb();
-int humFromDb();
+float desiredTempFromDb();
+int desiredHumFromDb();
 void saveDesiredStatus(bool desiredStatus);
 bool getDesiredStatus();
 void setupWebServer();
@@ -96,6 +95,8 @@ void setupWifi();
 void servoConect();
 void initializeTft();
 void updateDisplay();
+float roundToOneDecimal(float value);
+
 
 void setup() {
   Serial.begin(9600);
@@ -112,7 +113,7 @@ void setup() {
     dht.begin();
   #elif defined(SENSOR_BME280)
     I2CBME.begin(BME_SDA, BME_SCL);
-    if (!bme.begin(0x76, &I2CBME)) {
+    if (!bme.begin(0x77, &I2CBME)) {
       Serial.println("Could not find a valid BME280 sensor, check wiring!");
       while (1);
     }
@@ -123,17 +124,30 @@ void setup() {
 
 void loop() {
   bool desiredStatus = getDesiredStatus();
-  tempDb = tempFromDb();
-  humDb = humFromDb();
+  tempDb = desiredTempFromDb();
+  humDb = desiredHumFromDb();
   if (desiredStatus) {
     // Read temperature and humidity from the selected sensor
     #ifdef SENSOR_DHT11
-      tempSensor = round(dht.readTemperature());
-      humSensor = round(dht.readHumidity());
+      float tempReading = dht.readTemperature();
+      float humReading = dht.readHumidity();
     #elif defined(SENSOR_BME280)
-      tempSensor = round(bme.readTemperature());
-      humSensor = round(bme.readHumidity());
+      float tempReading = bme.readTemperature();
+      float humReading = bme.readHumidity();
     #endif
+
+    // Validate the readings and round them
+    if (tempReading >= tempMin && tempReading <= tempMax) {
+      tempSensor = roundToOneDecimal(tempReading);
+    } else {
+      // Handle invalid temperature readings here, if needed
+    }
+
+    if (humReading >= humMin && humReading <= humMax) {
+      humSensor = round(humReading);
+    } else {
+      // Handle invalid humidity readings here, if needed
+    }
 
     relayControl(tempSensor, tempDb);
     servoControl(humSensor, humDb);
@@ -148,11 +162,15 @@ void loop() {
   }
 }
 
+float roundToOneDecimal(float value) {
+  return String(value, 2).toFloat();
+}
+
 void updateDisplay() {
   if (tempDb != -500 || humDb != -500) {
       tft.setCursor(0, 0);
       tft.print("T: ");
-      tft.print(tempSensor);
+      tft.printf("%.1f", tempSensor); // Use tft.printf() instead of tft.print()
       tft.print("C");
 
       tft.setCursor(0, 20);
@@ -161,12 +179,12 @@ void updateDisplay() {
       tft.print("%");
 
       tft.setCursor(0, 40);
-      tft.print("set T: ");
-      tft.print(tempDb);
+      tft.print("setT:");
+      tft.printf("%.1f", tempDb);
       tft.print("C");
 
-      tft.setCursor(0, 60);
-      tft.print("set H: ");
+      tft.setCursor(0, 80);
+      tft.print("setH:");
       tft.print(humDb);
       tft.print("%");
   }
@@ -210,7 +228,7 @@ void setupWebServer() {
   server.on("/updateSettings", HTTP_GET, [](AsyncWebServerRequest *request) {
     String temp = request->getParam("temp")->value();
     String hum = request->getParam("hum")->value();
-    tempDb = temp.toInt();
+    tempDb = temp.toFloat(); // Changed from toInt() to toFloat()
     humDb = hum.toInt();
 
     Serial.println("Received updateSettings request with temp: " + temp + " and hum: " + hum);
@@ -233,7 +251,8 @@ void setupWebServer() {
     }
 
     request->send(200, "text/plain", "OK");
-  });
+});
+
 
   server.on("/toggleIncubator", HTTP_GET, [](AsyncWebServerRequest *request) {
     bool currentStatus = getDesiredStatus();
@@ -249,6 +268,15 @@ void setupWebServer() {
       request->send(404, "text/plain", "Data not found.");
     }
   });
+
+  server.on("/getSensorData", HTTP_GET, [](AsyncWebServerRequest *request) {
+  float temperature = bme.readTemperature();
+  float humidity = bme.readHumidity();
+
+  String jsonResponse = "{ \"temperature\": " + String(temperature) + ", \"humidity\": " + String(humidity) + " }";
+  request->send(200, "application/json", jsonResponse);
+  });
+
 
   server.begin();
 }
@@ -293,19 +321,20 @@ bool getDesiredStatus() {
   return desiredStatus;
 }
 
-int tempFromDb() {
+float desiredTempFromDb() {
   // Read the desired temperature from SPIFFS
   fs::File file = SPIFFS.open("/desired_temp.txt", "r");
   if (!file) {
     Serial.println("Error opening file for reading");
     return -500;
   }
-  int res = file.parseInt();
+  float res = file.parseFloat(); // Changed from parseInt() to parseFloat()
   file.close();
   return res;
 }
 
-int humFromDb() {
+
+int desiredHumFromDb() {
   // Read the desired humidity from SPIFFS
   fs::File file = SPIFFS.open("/desired_hum.txt", "r");
   if (!file) {
@@ -317,7 +346,7 @@ int humFromDb() {
   return res;
 }
 
-void sendToDatabase(int tempSensor, int humSensor) {
+void sendToDatabase(float tempSensor, int humSensor) {
   fs::File file = SPIFFS.open("/data.txt", "a");
   
   if (!file) {
@@ -326,14 +355,14 @@ void sendToDatabase(int tempSensor, int humSensor) {
     return;
   }
 
-  file.println("   " + String(tempSensor) + "," + String(humSensor));
+  file.println(String(tempSensor) + "," + String(humSensor) + "   ");
   file.close();
 
   Serial.println("Data saved to SPIFFS");
 }
 
 
-void relayControl(int tempSensor, int tempDb) {
+void relayControl(float tempSensor, float tempDb) {
   if (tempSensor >= tempDb) {
     digitalWrite(relayPin, OFF); // HEATER OFF
   } else if (tempSensor < tempDb) {
