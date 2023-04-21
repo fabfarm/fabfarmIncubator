@@ -62,3 +62,15 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 ## License
 
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for more information.
+
+## To Do
+
+1. A PID (Proportional-Integral-Derivative) control algorithm for more accurate temperature and humidity control.
+2. Data logging to an external storage like an SD card, or sending data to a remote server for long-term storage and analysis.
+3. Email or push notifications when the incubator temperature or humidity goes out of range or there is a system error.
+4. Incorporate a real-time clock (RTC) module to maintain accurate timekeeping, which can be helpful for time-stamped data logging.
+5. A battery backup system to ensure continuous operation during power outages.
+6. A user interface to change settings directly on the device without using a web server.
+7. Security improvements, such as password protection or authentication, for the web server.
+
+
