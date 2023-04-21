@@ -72,5 +72,7 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE) for more 
 5. A battery backup system to ensure continuous operation during power outages.
 6. A user interface to change settings directly on the device without using a web server.
 7. Security improvements, such as password protection or authentication, for the web server.
+8. Manual controls: buttons to manually increase or decrease the temperature and humidity settings
+9. 
 
 
