@@ -1,101 +1,90 @@
-#include <Arduino.h>
-#include <Wire.h>
-#include <DHT.h>
-#include <Adafruit_BME280.h>
-#include <WiFi.h>
-#include <math.h>
-#include <ESP32Servo.h>
-#include <AsyncElegantOTA.h>
+// Fabfarm Egg Incubator
+// Written by: Lucio
 
-#include <TFT_eSPI.h>// Hardware-specific library
-#include <SPI.h>
+#include <Arduino.h>                        // Arduino framework
+#include <Wire.h>                           // I2C library
+#include <DHT.h>                            // DHT library
+#include <Adafruit_BME280.h>                // BME280 library
+#include <WiFi.h>                           // WiFi library
+#include <math.h>                           // Math library
+#include <ESP32Servo.h>                     // Servo library
+#include <AsyncElegantOTA.h>                // OTA library
+#include <TFT_eSPI.h>                       // Hardware-specific library
+#include <SPI.h>                            // SPI library
+#include <FS.h>                             // SPIFFS library
+#include <SPIFFS.h>                         // SPIFFS library
+#include <ESPAsyncWebServer.h>              // Web server library
 
-#include <FS.h>
-#include <SPIFFS.h>
-#include <ESPAsyncWebServer.h>
+int           dly                 = 10;     //
+int           humSensor           = 0;
+float         tempSensor          = 0.0;
+float         tempDb              = 0.0;
+int           humDb               = 0;
+bool          wasNotFound         = false;
 
-AsyncWebServer server(80);
+// PIN definitions / assignments
+const int     relayPin            = 16;
+const int     servoPin            = 37;
 
-#define BLACK 0x0000
-#define WHITE 0xFFFF
-#define GREY  0x5AEB
-
-Servo myservo; // create a servo object
-
-#define WIFI_SSID "ratinho_do_malandro"
-#define WIFI_PASSWORD "newgerryforever2018"
-const String deviceName = "fabfarmincubator";
-
-const int relayPin = 16;
-const String documentsPrefix = "incubators/" + deviceName;
-const int servoPin = 37;
-
-TFT_eSPI tft = TFT_eSPI(); // Invoke custom library
+// Define the range of acceptable values
+float         tempMin             = 0.0;    // minimum temperature in Celsius (change as needed)
+float         tempMax             = 100.0;  // maximum temperature in Celsius (change as needed)
+float         humMin              = 0.0;    // minimum humidity in percent (change as needed)
+float         humMax              = 100.0;  // maximum humidity in percent (change as needed)
 
 // These are used to get information about static SRAM and flash memory sizes
-extern "C" char __data_start[];        // start of SRAM data
-extern "C" char _end[];            // end of SRAM data (used to check amount of SRAM this program's variables use)
-extern "C" char __data_load_end[];    // end of FLASH (used to check amount of Flash this program's code and data uses)
+extern "C" char __data_start[];             // start of SRAM data
+extern "C" char _end[];                     // end of SRAM data (used to check amount of SRAM this program's variables use)
+extern "C" char __data_load_end[];          // end of FLASH (used to check amount of Flash this program's code and data uses)
 
-int16_t h = 128;
-int16_t w = 160;
+AsyncWebServer  server(80);
+Servo           myservo;                          // create a servo object
+TFT_eSPI        tft               = TFT_eSPI();   // Invoke custom library
+int16_t         h                 = 128;
+int16_t         w                 = 160;
 
-int dly = 10;
+#define       BLACK                 0x0000
+#define       WHITE                 0xFFFF
+#define       GREY                  0x5AEB
+#define       WIFI_SSID             "ratinho_do_malandro"
+#define       WIFI_PASSWORD         "newgerryforever2018"
 
-//Define DHT11 sensor type and pin
+//Define sensor type and pin
 //#define SENSOR_DHT11
-#define SENSOR_BME280
-
-#ifdef SENSOR_DHT11
-  #define DHTTYPE DHT11
-  #define DHTPIN 39
+#define       SENSOR_BME280
+#ifdef        SENSOR_DHT11
+  #define     DHTTYPE DHT11
+  #define     DHTPIN                39
   DHT dht(DHTPIN, DHTTYPE);
-#elif defined(SENSOR_BME280)
-  #define BME_SDA 33
-  #define BME_SCL 34
+#elif   defined(SENSOR_BME280)
+  #define     BME_SDA     	        33
+  #define     BME_SCL               34
   Adafruit_BME280 bme;
   TwoWire I2CBME = TwoWire(0);
 #endif
 
-int humSensor = 0;
-float tempSensor = 0.0;
-float tempDb = 0.0;
-int humDb = 0;
-bool wasNotFound = false;
-// Define the range of acceptable values
-float tempMin = 0.0; // minimum temperature in Celsius (change as needed)
-float tempMax = 100.0; // maximum temperature in Celsius (change as needed)
-float humMin = 0.0;  // minimum humidity in percent (change as needed)
-float humMax = 100.0;  // maximum humidity in percent (change as needed)
+#define       ON                    LOW
+#define       OFF                   HIGH
 
-#define TTL_Logic_Low
-// Included option to use relays with TTL Logic LOW. Comment to use high
-#ifdef TTL_Logic_Low
-  #define ON   LOW
-  #define OFF  HIGH
-#else
-  #define ON   HIGH
-  #define OFF  LOW
-#endif
 
 // initialise each function
-void setupStorage();
-void errorLcd();
-void relayControl(float tempSensor, float tempDb);
-void servoControl(int humSensor, int humDb);
-void sendToDatabase(float tempSensor, int humSensor);
-void errorWithCode(String errorCode);
-void syncIncubator(bool desiredStatus);
-float desiredTempFromDb();
-int desiredHumFromDb();
-void saveDesiredStatus(bool desiredStatus);
-bool getDesiredStatus();
-void setupWebServer();
-void setupWifi();
-void servoConect();
-void initializeTft();
-void updateDisplay();
-float roundToOneDecimal(float value);
+void    setupStorage();
+void    errorLcd();
+void    relayControl(float tempSensor, float tempDb);
+void    servoControl(int humSensor, int humDb);
+void    sendToDatabase(float tempSensor, int humSensor);
+void    errorWithCode(String errorCode);
+void    syncIncubator(bool desiredStatus);
+float   desiredTempFromDb();
+int     desiredHumFromDb();
+void    saveDesiredStatus(bool desiredStatus);
+bool    getDesiredStatus();
+void    setupWebServer();
+void    setupWifi();
+void    servoConect();
+void    initializeTft();
+void    updateDisplay();
+float   roundToOneDecimal(float value);
 
 
 void setup() {
@@ -123,17 +112,18 @@ void setup() {
 }
 
 void loop() {
-  bool desiredStatus = getDesiredStatus();
-  tempDb = desiredTempFromDb();
-  humDb = desiredHumFromDb();
+  bool desiredStatus      = getDesiredStatus();
+  tempDb                  = desiredTempFromDb();
+  humDb                   = desiredHumFromDb();
+
+  // Read temperature and humidity from the selected sensor
   if (desiredStatus) {
-    // Read temperature and humidity from the selected sensor
     #ifdef SENSOR_DHT11
-      float tempReading = dht.readTemperature();
-      float humReading = dht.readHumidity();
+      float tempReading   = dht.readTemperature();
+      float humReading    = dht.readHumidity();
     #elif defined(SENSOR_BME280)
-      float tempReading = bme.readTemperature();
-      float humReading = bme.readHumidity();
+      float tempReading   = bme.readTemperature();
+      float humReading    = bme.readHumidity();
     #endif
 
     // Validate the readings and round them
@@ -221,11 +211,11 @@ void servoConect() {
   }
 
 void setupWebServer() {
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+  server.on("/",                HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(SPIFFS, "/index.html", "text/html");
   });
 
-  server.on("/updateSettings", HTTP_GET, [](AsyncWebServerRequest *request) {
+  server.on("/updateSettings",  HTTP_GET, [](AsyncWebServerRequest *request) {
     String temp = request->getParam("temp")->value();
     String hum = request->getParam("hum")->value();
     tempDb = temp.toFloat(); // Changed from toInt() to toFloat()
