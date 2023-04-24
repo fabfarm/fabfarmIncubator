@@ -148,6 +148,8 @@ void loop() {
   }
 }
 
+void saveToFile(const char *fileName, const String &content) {
+  fs::File file = SPIFFS.open(fileName, "w");
   if (!file) {
     Serial.println(String("Error opening ") + fileName + " for writing");
     return;
