@@ -110,7 +110,6 @@ void    setupWifi();
 void    servoConect();
 void    initializeTft();
 void    updateDisplay();
-float   roundToOneDecimal(float value);
 void    displayError(const String &errorMessage, const String &errorCode = "");
 void    incubatorRun();
 void    initializeSensor();
@@ -211,10 +210,6 @@ void errorWithCode(String errorCode) {
   tft.print("ERROR CODE: " + errorCode);
 }
 
-void syncIncubator(bool desiredStatus) {
-  saveDesiredStatus(desiredStatus);
-}
-
 // Initialize the sensor based on the selected type
 void initializeSensor() {
   #ifdef SENSOR_DHT11
@@ -280,10 +275,6 @@ void incubatorRun() {
   relayControl(tempSensor, tempDb);
   servoControl(humSensor, humDb);
   updateDisplay();
-}
-
-float roundToOneDecimal(float value) {
-  return round(value * 10.0) / 10.0;
 }
 
 void printDisplayLine(uint16_t x, uint16_t y, const char* label, float value, const char* unit) {
