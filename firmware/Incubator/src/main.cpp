@@ -148,6 +148,14 @@ void loop() {
   }
 }
 
+  if (!file) {
+    Serial.println(String("Error opening ") + fileName + " for writing");
+    return;
+  }
+  file.print(content);
+  file.close();
+}
+
 void handleUpdateServoSettings(AsyncWebServerRequest *request) {
   String angle = request->getParam("angle")->value();
   String interval = request->getParam("interval")->value();
@@ -181,14 +189,17 @@ String readFromFile(const char *fileName) {
   return content;
 }
 
-void saveToFile(const char *fileName, const String &content) {
-  fs::File file = SPIFFS.open(fileName, "w");
+void sendToDatabase(float tempSensor, int humSensor) {
+  fs::File file = SPIFFS.open("/data.txt", "a");
+  
   if (!file) {
-    Serial.println(String("Error opening ") + fileName + " for writing");
+    Serial.println("Error opening data.txt for writing");
+    displayError("091");
     return;
   }
-  file.print(content);
+  file.println(String(tempSensor) + "," + String(humSensor) + "   ");
   file.close();
+  Serial.println("Data saved to SPIFFS");
 }
 
 void saveDesiredStatus(bool desiredStatus) {
@@ -197,11 +208,6 @@ void saveDesiredStatus(bool desiredStatus) {
 
 bool getDesiredStatus() {
   return readFromFile("/desired_status.txt").toInt() == 1;
-}
-
-void sendToDatabase(float tempSensor, int humSensor) {
-  String data = "Temperature: " + String(tempSensor) + "C, Humidity: " + String(humSensor) + "%";
-  saveToFile("/data.txt", data);
 }
 
 void initializePID() {
