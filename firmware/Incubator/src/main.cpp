@@ -30,7 +30,9 @@ float         humMax              = 100.0;  // maximum humidity in percent (chan
 
 // PIN definitions / assignments
 const int     relayPin            = 16;
-const int     servoPin            = 37;
+const int     ventServoPin            = 37;
+const int     trayServoPin            = 38;
+
 
 // Sensor pins
 const int     dhtPin              = 39;
@@ -76,7 +78,8 @@ extern "C" char _end[];                     // end of SRAM data (used to check a
 extern "C" char __data_load_end[];          // end of FLASH (used to check amount of Flash this program's code and data uses)
 
 AsyncWebServer  server(80);
-Servo           myservo;                          // create a servo object
+Servo           ventServo;                          // create a servo object for the vent
+Servo           trayServo;                          // create a servo object for the tray
 TFT_eSPI        tft               = TFT_eSPI();   // Invoke custom library
 int16_t         h                 = 128;
 int16_t         w                 = 160;
@@ -101,7 +104,7 @@ int16_t         w                 = 160;
 // initialise each function
 void    setupStorage();
 void    relayControl(float tempSensor, float tempDb);
-void    servoControl(int humSensor, int humDb);
+void    ventServoControl(int humSensor, int humDb);
 void    sendToDatabase(float tempSensor, int humSensor);
 void    saveDesiredStatus(bool desiredStatus);
 bool    getDesiredStatus();
@@ -115,7 +118,7 @@ void    incubatorRun();
 void    initializeSensor();
 void    printDisplayLine(uint16_t x, uint16_t y, const char* label, float value, const char* unit);
 void    initializePID();
-void    turnEggs();
+void    trayServoControl();
 String  readFromFile(const char *fileName);
 void    saveToFile(const char *fileName, const String &content);
 void    handleRoot(AsyncWebServerRequest *request);
@@ -125,7 +128,7 @@ void    handleFetchData(AsyncWebServerRequest *request);
 void    handleGetSensorData(AsyncWebServerRequest *request);
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   initializeTft();
   setupStorage();                           // Setup storage for SPIFFS
   setupWifi();
@@ -135,6 +138,7 @@ void setup() {
   initializeSensor();
   tft.fillScreen(BLACK);
   initializePID();
+  delay(1000);
 }
 
 //############################################################################################################
@@ -143,13 +147,12 @@ void setup() {
 
 void loop() {
   bool        desiredStatus       = getDesiredStatus();
+  Serial.println("Desired status: " + String(desiredStatus ? "ON" : "OFF")); // Add this line
   tempDb                          = readFromFile("/desired_temp.txt").toFloat();
   humDb                           = readFromFile("/desired_hum.txt").toInt();
   // incubator function calls
-  // Turn the eggs
   if (desiredStatus) {
     incubatorRun();
-    turnEggs();
   }
 }
 
@@ -158,6 +161,15 @@ void loop() {
 //############################################################################################################
 
 // Functions to read from and write to a file in SPIFFS
+void initializeTft() {
+  tft.init(); // Initialise the TFT screen
+  tft.setRotation(1); // Rotate the screen 90 degrees counter clockwise
+  tft.fillScreen(BLACK); // Fill the screen with white
+  tft.setTextSize(2); // Set the font size to 2
+  tft.setTextColor(WHITE, BLACK); // Set the font colour to grey on a black background
+  tft.setCursor(0, 0);
+  tft.print("INITIALISING TFT...");
+  }
 String readFromFile(const char *fileName) {
   if (!SPIFFS.exists(fileName)) {
     Serial.println(String("Error opening ") + fileName + " for reading");
@@ -224,7 +236,7 @@ void initializeSensor() {
   #endif
 }
 
-void turnEggs() {
+void trayServoControl() {
   static unsigned long lastTurnTime = 0;
 
   int interval, servoTurnAngle;
@@ -233,23 +245,26 @@ void turnEggs() {
 
 
   if (millis() - lastTurnTime >= interval) {
-    int currentServoPosition = myservo.read();
+    int currentServoPosition = trayServo.read();
     int newPosition = currentServoPosition + servoTurnAngle;
     newPosition = constrain(newPosition, SERVO_OPEN, SERVO_CLOSED);
 
-    myservo.write(newPosition);
+    trayServo.write(newPosition);
     lastTurnTime = millis();
   }
 }
 
 // incubator function
 void incubatorRun() {
-  tft.fillScreen(BLACK);
-  tft.setCursor(0, 0);
-  tft.print("SYSTEM PAUSED");
-  digitalWrite(relayPin, OFF);
-  myservo.write(200);
-  return;
+  bool        desiredStatus       = getDesiredStatus();
+  if (!desiredStatus) {
+    tft.fillScreen(BLACK);
+    tft.setCursor(0, 0);
+    tft.print("SYSTEM PAUSED");
+    digitalWrite(relayPin, OFF);
+    ventServo.write(200);
+    return;
+  }
 
   #ifdef SENSOR_DHT11
     tempSensor   = dht.readTemperature();
@@ -273,7 +288,8 @@ void incubatorRun() {
 
   sendToDatabase(tempSensor, humSensor);
   relayControl(tempSensor, tempDb);
-  servoControl(humSensor, humDb);
+  ventServoControl(humSensor, humDb);
+  trayServoControl();
   updateDisplay();
 }
 
@@ -296,16 +312,6 @@ void updateDisplay() {
   }
 }
 
-void initializeTft() {
-  tft.init(); // Initialise the TFT screen
-  tft.setRotation(1); // Rotate the screen 90 degrees counter clockwise
-  tft.fillScreen(BLACK); // Fill the screen with white
-  tft.setTextSize(2); // Set the font size to 2
-  tft.setTextColor(WHITE, BLACK); // Set the font colour to grey on a black background
-  tft.setCursor(0, 0);
-  tft.print("INITIALISING TFT...");
-  }
-
 void setupWifi(){
   tft.fillScreen(BLACK); // Fill the screen with white
   tft.setCursor(0, 0);
@@ -327,8 +333,10 @@ void setupWifi(){
 
 void servoConect() {
   pinMode(relayPin, OUTPUT);
-  myservo.attach(servoPin);
-  myservo.write(200);
+  ventServo.attach(ventServoPin);
+  ventServo.write(200);
+  trayServo.attach(trayServoPin);
+  trayServo.write(200);
   }
 
 void handleRoot(AsyncWebServerRequest *request) {
@@ -354,8 +362,10 @@ void handleToggleIncubator(AsyncWebServerRequest *request) {
   bool currentStatus = getDesiredStatus();
   saveDesiredStatus(!currentStatus);
   String jsonResponse = "{\"status\": " + String(!currentStatus ? "true" : "false") + "}";
+  Serial.println("Toggled incubator status to: " + String(!currentStatus ? "ON" : "OFF")); // Add this line
   request->send(200, "application/json", jsonResponse);
 }
+
 
 void handleFetchData(AsyncWebServerRequest *request) {
   if (SPIFFS.exists("/data.txt")) {
@@ -399,12 +409,12 @@ void relayControl(float tempSensor, float tempDb) {
 
 
 // Function to control the servo
-void servoControl(int humSensor, int humDb) {
+void ventServoControl(int humSensor, int humDb) {
   humInput = humSensor;
   humSetpoint = humDb;
   humPID.Compute();
   int servoPosition = SERVO_CLOSED - humOutput;
-  myservo.write(servoPosition);
+  ventServo.write(servoPosition);
 }
 
 
