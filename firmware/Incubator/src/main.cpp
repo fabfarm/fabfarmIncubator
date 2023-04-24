@@ -14,6 +14,7 @@
 #include <FS.h>                             // SPIFFS library
 #include <SPIFFS.h>                         // SPIFFS library
 #include <ESPAsyncWebServer.h>              // Web server library
+#include <PID_v1.h>                         // Include the PID library
 
 int           humSensor           = 0;
 float         presSensor          = 0.0;
@@ -41,6 +42,17 @@ const int     SERVO_OPEN          = 0;
 const int     SERVO_CLOSED        = 200;
 
 
+// PID objects and tuning parameters for temperature and humidity
+double        tempSetpoint, tempInput,  tempOutput;
+double        humSetpoint,  humInput,   humOutput;
+double        tempKp  = 2, tempKi   = 5, tempKd   = 1;
+double        humKp   = 2, humKi    = 5, humKd    = 1;
+
+PID tempPID(&tempInput, &tempOutput,  &tempSetpoint,  tempKp, tempKi, tempKd, DIRECT);
+PID humPID(&humInput,   &humOutput,   &humSetpoint,   humKp,  humKi,  humKd,  DIRECT);
+
+
+
 //Define sensor type and pin
 //#define SENSOR_DHT11
 #define             SENSOR_BME280
@@ -56,7 +68,7 @@ const int     SERVO_CLOSED        = 200;
 #endif
 
 #define       ON                    LOW
-#define       OFF                   HIGH
+#define       OFF                   HIGH 
 
 // These are used to get information about static SRAM and flash memory sizes
 extern "C" char __data_start[];             // start of SRAM data
@@ -83,16 +95,14 @@ int16_t         w                 = 160;
 #define       BROWN                 0x79E0
 
 // Define fonts
-#define       WIFI_SSID             "fabfarm_ele_container"
-#define       WIFI_PASSWORD         "imakestuff"
+#define       WIFI_SSID             "ratinho_do_malandro"
+#define       WIFI_PASSWORD         "newgerryforever2018"
 
 // initialise each function
 void    setupStorage();
 void    relayControl(float tempSensor, float tempDb);
 void    servoControl(int humSensor, int humDb);
 void    sendToDatabase(float tempSensor, int humSensor);
-float   desiredTempFromDb();
-int     desiredHumFromDb();
 void    saveDesiredStatus(bool desiredStatus);
 bool    getDesiredStatus();
 void    setupWebServer();
@@ -105,6 +115,15 @@ void    displayError(const String &errorMessage, const String &errorCode = "");
 void    incubatorRun();
 void    initializeSensor();
 void    printDisplayLine(uint16_t x, uint16_t y, const char* label, float value, const char* unit);
+void    initializePID();
+void    turnEggs();
+String  readFromFile(const char *fileName);
+void    saveToFile(const char *fileName, const String &content);
+void    handleRoot(AsyncWebServerRequest *request);
+void    handleUpdateSettings(AsyncWebServerRequest *request);
+void    handleToggleIncubator(AsyncWebServerRequest *request);
+void    handleFetchData(AsyncWebServerRequest *request);
+void    handleGetSensorData(AsyncWebServerRequest *request);
 
 void setup() {
   Serial.begin(9600);
@@ -116,6 +135,7 @@ void setup() {
   servoConect();
   initializeSensor();
   tft.fillScreen(BLACK);
+  initializePID();
 }
 
 //############################################################################################################
@@ -124,15 +144,64 @@ void setup() {
 
 void loop() {
   bool        desiredStatus       = getDesiredStatus();
-  tempDb                          = desiredTempFromDb();
-  humDb                           = desiredHumFromDb();
+  tempDb                          = readFromFile("/desired_temp.txt").toFloat();
+  humDb                           = readFromFile("/desired_hum.txt").toInt();
   // incubator function calls
-  incubatorRun();
+  // Turn the eggs
+  if (desiredStatus) {
+    incubatorRun();
+    turnEggs();
+  }
 }
 
 //############################################################################################################
 // Functions
 //############################################################################################################
+
+// Functions to read from and write to a file in SPIFFS
+String readFromFile(const char *fileName) {
+  if (!SPIFFS.exists(fileName)) {
+    Serial.println(String("Error opening ") + fileName + " for reading");
+    return "";
+  }
+
+  fs::File file = SPIFFS.open(fileName, "r");
+  String content = file.readString();
+  file.close();
+  return content;
+}
+
+void saveToFile(const char *fileName, const String &content) {
+  fs::File file = SPIFFS.open(fileName, "w");
+  if (!file) {
+    Serial.println(String("Error opening ") + fileName + " for writing");
+    return;
+  }
+  file.print(content);
+  file.close();
+}
+
+void saveDesiredStatus(bool desiredStatus) {
+  saveToFile("/desired_status.txt", desiredStatus ? "1" : "0");
+}
+
+bool getDesiredStatus() {
+  return readFromFile("/desired_status.txt").toInt() == 1;
+}
+
+void sendToDatabase(float tempSensor, int humSensor) {
+  String data = "Temperature: " + String(tempSensor) + "C, Humidity: " + String(humSensor) + "%";
+  saveToFile("/data.txt", data);
+}
+
+
+void initializePID() {
+  // Initialize the PID objects
+  tempPID.SetMode(AUTOMATIC);
+  tempPID.SetOutputLimits(0, 1); // Adjust these limits according to your relay control range
+  humPID.SetMode(AUTOMATIC);
+  humPID.SetOutputLimits(0, 180); // Adjust these limits according to your servo control range
+}
 
 void errorWithCode(String errorCode) {
   tft.fillScreen(BLACK);
@@ -145,7 +214,6 @@ void errorWithCode(String errorCode) {
 void syncIncubator(bool desiredStatus) {
   saveDesiredStatus(desiredStatus);
 }
-
 
 // Initialize the sensor based on the selected type
 void initializeSensor() {
@@ -161,17 +229,32 @@ void initializeSensor() {
   #endif
 }
 
+void turnEggs() {
+  static unsigned long lastTurnTime = 0;
+
+  int interval, servoTurnAngle;
+  interval = readFromFile("/interval.txt").toFloat();
+  servoTurnAngle = readFromFile("/servoTurnAngle.txt").toFloat();
+
+
+  if (millis() - lastTurnTime >= interval) {
+    int currentServoPosition = myservo.read();
+    int newPosition = currentServoPosition + servoTurnAngle;
+    newPosition = constrain(newPosition, SERVO_OPEN, SERVO_CLOSED);
+
+    myservo.write(newPosition);
+    lastTurnTime = millis();
+  }
+}
+
 // incubator function
 void incubatorRun() {
-  bool        desiredStatus       = getDesiredStatus();
-  if (!desiredStatus) {
-    tft.fillScreen(BLACK);
-    tft.setCursor(0, 0);
-    tft.print("SYSTEM PAUSED");
-    digitalWrite(relayPin, OFF);
-    myservo.write(200);
-    return;
-  }
+  tft.fillScreen(BLACK);
+  tft.setCursor(0, 0);
+  tft.print("SYSTEM PAUSED");
+  digitalWrite(relayPin, OFF);
+  myservo.write(200);
+  return;
 
   #ifdef SENSOR_DHT11
     tempSensor   = dht.readTemperature();
@@ -257,164 +340,83 @@ void servoConect() {
   myservo.write(200);
   }
 
+void handleRoot(AsyncWebServerRequest *request) {
+  request->send(SPIFFS, "/index.html", "text/html");
+}
+
+void handleUpdateSettings(AsyncWebServerRequest *request) {
+  String temp = request->getParam("temp")->value();
+  String hum = request->getParam("hum")->value();
+  tempDb = temp.toFloat();
+  humDb = hum.toInt();
+
+  Serial.println("Received updateSettings request with temp: " + temp + " and hum: " + hum);
+
+  // Save the new desired temperature and humidity values to SPIFFS
+  saveToFile("/desired_temp.txt", String(tempDb));
+  saveToFile("/desired_hum.txt", String(humDb));
+
+  request->send(200, "text/plain", "OK");
+}
+
+void handleToggleIncubator(AsyncWebServerRequest *request) {
+  bool currentStatus = getDesiredStatus();
+  saveDesiredStatus(!currentStatus);
+  String jsonResponse = "{\"status\": " + String(!currentStatus ? "true" : "false") + "}";
+  request->send(200, "application/json", jsonResponse);
+}
+
+void handleFetchData(AsyncWebServerRequest *request) {
+  if (SPIFFS.exists("/data.txt")) {
+    request->send(SPIFFS, "/data.txt", "text/plain");
+  } else {
+    request->send(404, "text/plain", "Data not found.");
+  }
+}
+
+void handleGetSensorData(AsyncWebServerRequest *request) {
+  float temperature = bme.readTemperature();
+  float humidity = bme.readHumidity();
+
+  String jsonResponse = "{ \"temperature\": " + String(temperature) + ", \"humidity\": " + String(humidity) + " }";
+  request->send(200, "application/json", jsonResponse);
+}
 // Set up the web server routes and start the server
 void setupWebServer() {
-  // Serve the index.html file
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(SPIFFS, "/index.html", "text/html");
-  });
-
-  // Update settings
-  server.on("/updateSettings", HTTP_GET, [](AsyncWebServerRequest *request) {
-    String temp = request->getParam("temp")->value();
-    String hum = request->getParam("hum")->value();
-    tempDb = temp.toFloat();
-    humDb = hum.toInt();
-
-    Serial.println("Received updateSettings request with temp: " + temp + " and hum: " + hum);
-
-    // Save the new desired temperature and humidity values to SPIFFS
-    fs::File tempFile = SPIFFS.open("/desired_temp.txt", "w");
-    if (tempFile) {
-      tempFile.println(tempDb);
-      tempFile.close();
-    } else {
-      Serial.println("Error opening desired_temp.txt for writing");
-    }
-
-    fs::File humFile = SPIFFS.open("/desired_hum.txt", "w");
-    if (humFile) {
-      humFile.println(humDb);
-      humFile.close();
-    } else {
-      Serial.println("Error opening desired_hum.txt for writing");
-    }
-
-    request->send(200, "text/plain", "OK");
-  });
-
-  // Toggle incubator status
-  server.on("/toggleIncubator", HTTP_GET, [](AsyncWebServerRequest *request) {
-    bool currentStatus = getDesiredStatus();
-    saveDesiredStatus(!currentStatus);
-    String jsonResponse = "{\"status\": " + String(!currentStatus ? "true" : "false") + "}";
-    request->send(200, "application/json", jsonResponse);
-  });
-
-  // Fetch data
-  server.on("/fetchData", HTTP_GET, [](AsyncWebServerRequest *request) {
-    if (SPIFFS.exists("/data.txt")) {
-      request->send(SPIFFS, "/data.txt", "text/plain");
-    } else {
-      request->send(404, "text/plain", "Data not found.");
-    }
-  });
-
-  // Get sensor data
-  server.on("/getSensorData", HTTP_GET, [](AsyncWebServerRequest *request) {
-    float temperature = bme.readTemperature();
-    float humidity = bme.readHumidity();
-
-    String jsonResponse = "{ \"temperature\": " + String(temperature) + ", \"humidity\": " + String(humidity) + " }";
-    request->send(200, "application/json", jsonResponse);
-  });
+  server.on("/", HTTP_GET, handleRoot);
+  server.on("/updateSettings", HTTP_GET, handleUpdateSettings);
+  server.on("/toggleIncubator", HTTP_GET, handleToggleIncubator);
+  server.on("/fetchData", HTTP_GET, handleFetchData);
+  server.on("/getSensorData", HTTP_GET, handleGetSensorData);
 
   // Start the server
   server.begin();
 }
 
-// Function to save the desired status to SPIFFS
-void saveDesiredStatus(bool desiredStatus) {
-  fs::File file = SPIFFS.open("/desired_status.txt", "w");
-  
-  if (!file) {
-    Serial.println("Error opening desired_status.txt for writing");
-    displayError("PLS CHECK DOCS:", "071");
-    return;
-  }
-
-  file.println(desiredStatus ? "1" : "0");
-  file.close();
-}
-
-// Function to read the desired status from SPIFFS
-bool getDesiredStatus() {
-  fs::File file = SPIFFS.open("/desired_status.txt", "r");
-  
-  if (!file) {
-    Serial.println("Error opening desired_status.txt for reading");
-    displayError("PLS CHECK DOCS:", "071");
-    return true; // Default to true if there is an error
-  }
-
-  bool desiredStatus = file.parseInt() == 1;
-  file.close();
-
-  return desiredStatus;
-}
-
-// Function to read the desired temperature from SPIFFS
-float desiredTempFromDb() {
-  // Read the desired temperature from SPIFFS
-  fs::File file = SPIFFS.open("/desired_temp.txt", "r");
-  if (!file) {
-    Serial.println("Error opening desired_temp.txt for reading");
-    return -500;
-  }
-  float res = file.parseFloat();
-  file.close();
-  return res;
-}
-
-// Function to read the desired humidity from SPIFFS
-int desiredHumFromDb() {
-  // Read the desired humidity from SPIFFS
-  fs::File file = SPIFFS.open("/desired_hum.txt", "r");
-  if (!file) {
-    Serial.println("Error opening file for reading");
-    displayError("error opening file");
-    return -500;
-  }
-  int res = file.parseInt();
-  file.close();
-  return res;
-}
-
-// Function to send data to the database
-void sendToDatabase(float tempSensor, int humSensor) {
-  fs::File file = SPIFFS.open("/data.txt", "a");
-  
-  if (!file) {
-    Serial.println("Error opening data.txt for writing");
-    displayError("091");
-    return;
-  }
-
-  file.println(String(tempSensor) + "," + String(humSensor) + "   ");
-  file.close();
-
-  Serial.println("Data saved to SPIFFS");
-}
-
 // Function to control the relay
 void relayControl(float tempSensor, float tempDb) {
-  if (tempSensor >= tempDb) {
-    digitalWrite(relayPin, OFF); // HEATER OFF
+  tempInput = tempSensor;
+  tempSetpoint = tempDb;
+  tempPID.Compute();
+
+  if (tempOutput > 0.5) { // Change this threshold according to your application
+    digitalWrite(relayPin, ON);
   } else {
-    digitalWrite(relayPin, ON); // HEATER ON
+    digitalWrite(relayPin, OFF);
   }
 }
 
-// Function to control the servo motor
+
+// Function to control the servo
 void servoControl(int humSensor, int humDb) {
-  if (humSensor > humDb) {
-    myservo.write(SERVO_OPEN); // ventilation opens
-  } else {
-    myservo.write(SERVO_CLOSED); // ventilation closes
-  }
+  humInput = humSensor;
+  humSetpoint = humDb;
+  humPID.Compute();
+  int servoPosition = SERVO_CLOSED - humOutput;
+  myservo.write(servoPosition);
 }
 
-// Function to read the desired temperature from SPIFFS
+
 void setupStorage() {
   // Initialize SPIFFS (file system)
   if (!SPIFFS.begin(true)) {
@@ -433,16 +435,14 @@ void setupStorage() {
   Serial.println("SPIFFS mounted successfully!");
 }
 
+// Function to display an error on the TFT screen
 void displayError(const String &errorMessage, const String &errorCode) {
-  tft.fillScreen(BLACK);
-  tft.setCursor(0, 0);
-  tft.print(errorMessage);
-
-  if (!errorCode.isEmpty()) {
-    tft.setCursor(0, 20);
-    tft.print("ERROR CODE: " + errorCode);
-  } else {
-    tft.setCursor(0, 20);
-    tft.print("PLS CHECK LOG");
-  }
+tft.fillScreen(RED);
+tft.setTextColor(WHITE);
+tft.setCursor(0, 0);
+tft.print(errorMessage);
+if (errorCode != "") {
+tft.setCursor(0, 20);
+tft.print("CODE: " + errorCode);
+}
 }
