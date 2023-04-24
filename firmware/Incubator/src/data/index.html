@@ -20,6 +20,14 @@
     <br>
     <button type="submit">Update Settings</button>
   </form>
+  <label for="angle">Servo Turn Angle:</label>
+<input type="number" id="angle" name="angle" step="any" min="0" max="180">
+<br>
+<label for="interval">Servo Turn Interval:</label>
+<input type="number" id="interval" name="interval" min="0">
+<br>
+<button type="button" onclick="updateServoSettings()">Update Servo Settings</button>
+
   <button onclick="toggleIncubator()">Toggle Incubator</button>
   <p id="incubatorStatus">Status: Unknown</p>
   <br>
@@ -50,6 +58,24 @@
           console.error('There was a problem with the fetch operation:', error);
         });
     }
+    function updateServoSettings() {
+  const angle = document.getElementById("angle").value;
+  const interval = document.getElementById("interval").value;
+
+  fetch(`/updateServoSettings?angle=${angle}&interval=${interval}`)
+    .then((response) => {
+      if (response.ok) {
+        alert("Servo settings updated successfully!");
+      } else {
+        alert("Error updating servo settings.");
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      alert("Error updating servo settings.");
+    });
+}
+
 
     function toggleIncubator() {
       fetch('/toggleIncubator')
