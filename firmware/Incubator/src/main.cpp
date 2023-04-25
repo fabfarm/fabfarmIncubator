@@ -100,8 +100,8 @@ void    setupStorage();
 void    relayControl(float tempSensor, float tempDb);
 void    ventServoControl(int humSensor, int humDb);
 void    sendToDatabase(float tempSensor, int humSensor);
-void    saveDesiredStatus(bool desiredStatus);
-bool    getDesiredStatus();
+void    saveSetStatus(bool setStatus);
+bool    getSetStatus();
 void    setupWebServer();
 void    setupWifi();
 void    servoConect();
@@ -139,11 +139,11 @@ void setup() {
 }
 
 void loop() {
-  bool        desiredStatus       = getDesiredStatus();
-  Serial.println("Desired status: " + String(desiredStatus ? "ON" : "OFF"));
-  tempDb                          = readFromFile("/desired_temp.txt").toFloat();
-  humDb                           = readFromFile("/desired_hum.txt").toInt();
-  if (desiredStatus) {
+  bool        setStatus           = getSetStatus();
+  Serial.println("Set status: " + String(setStatus ? "ON" : "OFF"));
+  tempDb                          = readFromFile("/set_temp.txt").toFloat();
+  humDb                           = readFromFile("/set_hum.txt").toInt();
+  if (setStatus) {
     incubatorRun();
   }
 }
@@ -161,12 +161,9 @@ void saveToFile(const char *fileName, const String &content) {
 void handleUpdateServoSettings(AsyncWebServerRequest *request) {
   String angle = request->getParam("angle")->value();
   String interval = request->getParam("interval")->value();
-  
   Serial.println("Received updateServoSettings request with angle: " + angle + " and interval: " + interval);
-
   saveToFile("/servoTurnAngle.txt", angle);
   saveToFile("/interval.txt", interval);
-
   request->send(200, "text/plain", "OK");
 }
 
@@ -184,7 +181,6 @@ String readFromFile(const char *fileName) {
     Serial.println(String("Error opening ") + fileName + " for reading");
     return "";
   }
-
   fs::File file = SPIFFS.open(fileName, "r");
   String content = file.readString();
   file.close();
@@ -204,12 +200,12 @@ void sendToDatabase(float tempSensor, int humSensor) {
   Serial.println("Data saved to SPIFFS");
 }
 
-void saveDesiredStatus(bool desiredStatus) {
-  saveToFile("/desired_status.txt", desiredStatus ? "1" : "0");
+void saveSetStatus(bool setStatus) {
+  saveToFile("/set_status.txt", setStatus ? "1" : "0");
 }
 
-bool getDesiredStatus() {
-  return readFromFile("/desired_status.txt").toInt() == 1;
+bool getSetStatus() {
+  return readFromFile("/set_status.txt").toInt() == 1;
 }
 
 void initializePID() {
@@ -268,8 +264,8 @@ void trayServoControl() {
 
 
 void incubatorRun() {
-  bool        desiredStatus       = getDesiredStatus();
-  if (!desiredStatus) {
+  bool        setStatus       = getSetStatus();
+  if (!setStatus) {
     tft.fillScreen(BLACK);
     tft.setCursor(0, 0);
     tft.print("SYSTEM PAUSED");
@@ -363,15 +359,15 @@ void handleUpdateSettings(AsyncWebServerRequest *request) {
 
   Serial.println("Received updateSettings request with temp: " + temp + " and hum: " + hum);
 
-  saveToFile("/desired_temp.txt", String(tempDb));
-  saveToFile("/desired_hum.txt", String(humDb));
+  saveToFile("/set_temp.txt", String(tempDb));
+  saveToFile("/set_hum.txt", String(humDb));
 
   request->send(200, "text/plain", "OK");
 }
 
 void handleToggleIncubator(AsyncWebServerRequest *request) {
-  bool currentStatus = getDesiredStatus();
-  saveDesiredStatus(!currentStatus);
+  bool currentStatus = getSetStatus();
+  saveSetStatus(!currentStatus);
   String jsonResponse = "{\"status\": " + String(!currentStatus ? "true" : "false") + "}";
   Serial.println("Toggled incubator status to: " + String(!currentStatus ? "ON" : "OFF"));
   request->send(200, "application/json", jsonResponse);
