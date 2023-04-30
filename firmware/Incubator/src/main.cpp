@@ -3,12 +3,10 @@
 
 #include <Arduino.h>
 #include <Wire.h>
-#include <DHT.h>
 #include <Adafruit_BME280.h>
-#include <WiFi.h>
+#include <WiFiManager.h>
 #include <math.h>
 #include <ESP32Servo.h>
-#include <AsyncElegantOTA.h>
 #include <TFT_eSPI.h>
 #include <SPI.h>
 #include <FS.h>
@@ -33,9 +31,8 @@ const int     temperatureRelayPin   = 16;
 const int     humidityVentServoPin  = 37;
 const int     trayServoPin          = 38;
 
-const int     DHTSensorPin          = 39;
-const int     BMESdaPin             = 33;
-const int     BMESclPin             = 34;
+const int     BMESdaPin             = 33;   //Board SDA to sensor SDI
+const int     BMESclPin             = 34;   //Board SCL to sensor SCK
 
 const int     servoOpenPosition     = 0;
 const int     servoClosedPosition   = 200;
@@ -43,27 +40,17 @@ const int     servoClosedPosition   = 200;
 // PID objects and tuning parameters for temperature and humidity
 double        tempSetpoint, tempInput,  tempOutput;
 double        humSetpoint,  humInput,   humOutput;
-double        tempKp  = 2, tempKi   = 5, tempKd   = 1;
-double        humKp   = 2, humKi    = 5, humKd    = 1;
+double        tempKp, tempKi, tempKd;
+double        humKp, humKi, humKd;
+
 
 PID tempPID(&tempInput, &tempOutput,  &tempSetpoint,  tempKp, tempKi, tempKd, DIRECT);
 PID humPID(&humInput,   &humOutput,   &humSetpoint,   humKp,  humKi,  humKd,  DIRECT);
 
-
-
-//Define sensor type and pin
-//#define SENSOR_DHT11
-#define             SENSOR_BME280
-#ifdef              SENSOR_DHT11
-  #define           DHTTYPE DHT11
-  #define           DHTPIN          DHTSensorPin
-  DHT dht(DHTPIN, DHTTYPE);
-#elif   defined(SENSOR_BME280)
-  #define           BME_SDA     	  BMESdaPin
-  #define           BME_SCL         BMESclPin
-  Adafruit_BME280   bme;
-  TwoWire           I2CBME        = TwoWire(0);
-#endif
+#define           BME_SDA     	  BMESdaPin
+#define           BME_SCL         BMESclPin
+Adafruit_BME280   bme;
+TwoWire           I2CBME        = TwoWire(0);
 
 #define       relayOn                    LOW
 #define       relayOff                   HIGH 
@@ -80,9 +67,6 @@ int16_t         displayWidth      = 160;
 #define       WHITE                 0xFFFF
 #define       RED                   0xF800
 
-#define       WIFI_SSID             "ratinho_do_malandro"
-#define       WIFI_PASSWORD         "newgerryforever2018"
-
 void    initializeStorage();
 void    controlTemperatureRelay(float currentTemperature, float targetTemperature);
 void    controlHumidityVentServo(int currentHumidity, int targetHumidity);
@@ -90,7 +74,6 @@ void    saveTemperatureHumidityData(float currentTemperature, int currentHumidit
 void    saveIncubatorStatus(bool isIncubatorActive);
 bool    getIncubatorStatus();
 void    initializeWebServer();
-void    connectToWifi();
 void    connectServos();
 void    initializeTFTDisplay();
 void    updateTFTDisplay();
@@ -109,14 +92,18 @@ void    handleDataFetchRequest(AsyncWebServerRequest *request);
 void    handleSensorDataRequest(AsyncWebServerRequest *request);
 void    printDebugMessage(String message);
 void    handleServoSettingsUpdate(AsyncWebServerRequest *request);
+void    handlePIDSettingsUpdate(AsyncWebServerRequest *request);
+void    wifiManagerSetup();
+void    loadPIDSettings();
+void    loadTargetTemperatureAndHumidity();
 
 void setup() {
   Serial.begin(115200);
+  wifiManagerSetup();
   initializeTFTDisplay();
   initializeStorage();
-  connectToWifi();
+  loadPIDSettings();
   initializeWebServer();
-  AsyncElegantOTA.begin(&server);
   connectServos();
   initializeSensors();
   tft.fillScreen(BLACK);
@@ -128,11 +115,36 @@ void setup() {
 void loop() {
   bool        isIncubatorActive = getIncubatorStatus();
   Serial.println("Set status: " + String(isIncubatorActive ? "relayOn" : "relayOff"));
-  targetTemperature             = readFileContent("/set_temp.txt").toFloat();
-  targetHumidity                = readFileContent("/set_hum.txt").toInt();
+  loadTargetTemperatureAndHumidity();
   if (isIncubatorActive) {
     runIncubator();
   }
+}
+
+void loadPIDSettings() {
+  tempKp = readFileContent("/tempKp.txt").toDouble();
+  tempKi = readFileContent("/tempKi.txt").toDouble();
+  tempKd = readFileContent("/tempKd.txt").toDouble();
+  humKp = readFileContent("/humKp.txt").toDouble();
+  humKi = readFileContent("/humKi.txt").toDouble();
+  humKd = readFileContent("/humKd.txt").toDouble();
+}
+void    wifiManagerSetup() {
+  WiFiManager wm;
+  //wm.resetSettings(); // 
+  bool res;
+  res = wm.autoConnect("AutoConnectAP");
+  if (!res) {
+    Serial.println("Failed to connect");
+    ESP.restart();
+  }
+  else {
+    Serial.println("Connected to WiFi");
+  }
+}
+void loadTargetTemperatureAndHumidity() {
+  targetTemperature = readFileContent("/set_temp.txt").toFloat();
+  targetHumidity = readFileContent("/set_hum.txt").toInt();
 }
 
 void writeContentToFile(const char *fileName, const String &content) {
@@ -145,15 +157,6 @@ void writeContentToFile(const char *fileName, const String &content) {
   file.close();
 }
 
-void handleServoSettingsUpdate(AsyncWebServerRequest *request) {
-  String angle = request->getParam("angle")->value();
-  String interval = request->getParam("interval")->value();
-  Serial.println("Received updateServoSettings request with angle: " + angle + " and interval: " + interval);
-  writeContentToFile("/servoTurnAngle.txt", angle);
-  writeContentToFile("/interval.txt", interval);
-  request->send(200, "text/plain", "OK");
-}
-
 void initializeTFTDisplay() {
   tft.init();
   tft.setRotation(1);
@@ -163,6 +166,7 @@ void initializeTFTDisplay() {
   tft.setCursor(0, 0);
   tft.print("INITIALISING TFT...");
   }
+
 String readFileContent(const char *fileName) {
   if (!SPIFFS.exists(fileName)) {
     Serial.println(String("Error opening ") + fileName + " for reading");
@@ -210,18 +214,12 @@ void errorWithCode(String errorCode) {
   tft.print("ERROR CODE: " + errorCode);
 }
 
-// Initialize the sensor based on the selected type
 void initializeSensors() {
-  #ifdef SENSOR_DHT11
-    dht.begin();
-  #elif defined(SENSOR_BME280)
-    I2CBME.begin(BME_SDA, BME_SCL);
-    
-    if (!bme.begin(0x77, &I2CBME)) {
-      printDebugMessage("Could not find a valid BME280 sensor, check wiring!");
-      while (1) {}
-    }
-  #endif
+  I2CBME.begin(BME_SDA, BME_SCL); 
+  if (!bme.begin(0x77, &I2CBME)) {
+    printDebugMessage("Could not find a valid BME280 sensor, check wiring!");
+    while (1) {}
+  }
 }
 
 void controlTrayServo() {
@@ -249,7 +247,6 @@ void controlTrayServo() {
   }
 }
 
-
 void runIncubator() {
   bool        isIncubatorActive   = getIncubatorStatus();
   if (!isIncubatorActive) {
@@ -261,18 +258,12 @@ void runIncubator() {
     return;
   }
 
-  #ifdef SENSOR_DHT11
-    currentTemperature    = dht.readTemperature();
-    currentHumidity       = dht.readHumidity();
-  #elif defined(SENSOR_BME280)
-    currentTemperature    = bme.readTemperature();
-    currentHumidity       = bme.readHumidity();
-    currentPressure        = bme.readPressure() / 100.0F;
-  #endif
-
+  currentTemperature    = bme.readTemperature();
+  currentHumidity       = bme.readHumidity();
+  currentPressure        = bme.readPressure() / 100.0F;
 
   if (isnan(currentHumidity) || isnan(currentTemperature)) {
-    printDebugMessage("Failed to read from DHT sensor!");
+    printDebugMessage("Failed to read from sensor!");
     return;
   }
 
@@ -307,25 +298,6 @@ void updateTFTDisplay() {
   }
 }
 
-void connectToWifi(){
-  tft.fillScreen(BLACK);
-  tft.setCursor(0, 0);
-  tft.print("Connecting...");
-  Serial.println();
-  Serial.print("Connecting...");
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  while (WiFi.status() != WL_CONNECTED) {
-    Serial.print(".");
-    }
-  tft.fillScreen(BLACK);
-  tft.setCursor(0, 0);
-  tft.print("Connected!");
-  tft.print(WiFi.localIP());
-  Serial.println();
-  Serial.print("Connected!");
-  Serial.println(WiFi.localIP());
-}
-
 void connectServos() {
   pinMode(temperatureRelayPin, OUTPUT);
   ventServo.attach(humidityVentServoPin);
@@ -333,6 +305,32 @@ void connectServos() {
   trayServo.attach(trayServoPin);
   trayServo.write(200);
   }
+
+void handleServoSettingsUpdate(AsyncWebServerRequest *request) {
+  String angle = request->getParam("angle")->value();
+  String interval = request->getParam("interval")->value();
+  Serial.println("Received updateServoSettings request with angle: " + angle + " and interval: " + interval);
+  writeContentToFile("/servoTurnAngle.txt", angle);
+  writeContentToFile("/interval.txt", interval);
+  request->send(200, "text/plain", "OK");
+}
+
+void pidSettingsUpdate(AsyncWebServerRequest *request) {
+  String tempKp = request->getParam("tempKp")->value();
+  String tempKi = request->getParam("tempKi")->value();
+  String tempKd = request->getParam("tempKd")->value();
+  String humKp = request->getParam("humKp")->value();
+  String humKi = request->getParam("humKi")->value();
+  String humKd = request->getParam("humKd")->value();
+  Serial.println("Received updatePIDSettings request with tempKp: " + tempKp + " tempKi: " + tempKi + " tempKd: " + tempKd + " humKp: " + humKp + " humKi: " + humKi + " humKd: " + humKd);
+  writeContentToFile("/tempKp.txt", tempKp);
+  writeContentToFile("/tempKi.txt", tempKi);
+  writeContentToFile("/tempKd.txt", tempKd);
+  writeContentToFile("/humKp.txt", humKp);
+  writeContentToFile("/humKi.txt", humKi);
+  writeContentToFile("/humKd.txt", humKd);
+  request->send(200, "text/plain", "OK");
+}
 
 void handleRootRequest(AsyncWebServerRequest *request) {
   request->send(SPIFFS, "/index.html", "text/html");
@@ -359,7 +357,6 @@ void handleIncubatorStatusToggle(AsyncWebServerRequest *request) {
   Serial.println("Toggled incubator status to: " + String(!currentStatus ? "relayOn" : "relayOff"));
   request->send(200, "application/json", jsonResponse);
 }
-
 
 void handleDataFetchRequest(AsyncWebServerRequest *request) {
   if (SPIFFS.exists("/data.txt")) {
