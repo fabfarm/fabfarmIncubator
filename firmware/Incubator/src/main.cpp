@@ -147,7 +147,7 @@ void loadTargetTemperatureAndHumidity() {
   targetHumidity = readFromFile("/set_hum.txt").toInt();
 }
 
-void writeToFile(const char *fileName, const String &content, bool append = false) {
+void writeToFile(const char *fileName, const String &content, bool append) {
   fs::File file = SPIFFS.open(fileName, append ? "a" : "w");
   if (!file) {
     Serial.println(String("Error opening ") + fileName + " for writing");
@@ -156,7 +156,6 @@ void writeToFile(const char *fileName, const String &content, bool append = fals
   file.print(content);
   file.close();
 }
-
 
 void initializeTFTDisplay() {
   tft.init();
