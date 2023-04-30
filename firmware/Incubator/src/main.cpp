@@ -83,8 +83,8 @@ void    initializeSensors();
 void    displayLineOnTFT(uint16_t x, uint16_t y, const char* label, float value, const char* unit);
 void    setupPIDControllers();
 void    controlTrayServo();
-String  readFileContent(const char *fileName);
-void    writeContentToFile(const char *fileName, const String &content);
+String  readFromFile(const char *fileName);
+void    writeToFile(const char *fileName, const String &content, bool append = false);
 void    handleRootRequest(AsyncWebServerRequest *request);
 void    handleTemperatureHumiditySettingsUpdate(AsyncWebServerRequest *request);
 void    handleIncubatorStatusToggle(AsyncWebServerRequest *request);
@@ -122,12 +122,12 @@ void loop() {
 }
 
 void loadPIDSettings() {
-  tempKp = readFileContent("/tempKp.txt").toDouble();
-  tempKi = readFileContent("/tempKi.txt").toDouble();
-  tempKd = readFileContent("/tempKd.txt").toDouble();
-  humKp = readFileContent("/humKp.txt").toDouble();
-  humKi = readFileContent("/humKi.txt").toDouble();
-  humKd = readFileContent("/humKd.txt").toDouble();
+  tempKp = readFromFile("/tempKp.txt").toDouble();
+  tempKi = readFromFile("/tempKi.txt").toDouble();
+  tempKd = readFromFile("/tempKd.txt").toDouble();
+  humKp = readFromFile("/humKp.txt").toDouble();
+  humKi = readFromFile("/humKi.txt").toDouble();
+  humKd = readFromFile("/humKd.txt").toDouble();
 }
 void    wifiManagerSetup() {
   WiFiManager wm;
@@ -143,12 +143,12 @@ void    wifiManagerSetup() {
   }
 }
 void loadTargetTemperatureAndHumidity() {
-  targetTemperature = readFileContent("/set_temp.txt").toFloat();
-  targetHumidity = readFileContent("/set_hum.txt").toInt();
+  targetTemperature = readFromFile("/set_temp.txt").toFloat();
+  targetHumidity = readFromFile("/set_hum.txt").toInt();
 }
 
-void writeContentToFile(const char *fileName, const String &content) {
-  fs::File file = SPIFFS.open(fileName, "w");
+void writeToFile(const char *fileName, const String &content, bool append = false) {
+  fs::File file = SPIFFS.open(fileName, append ? "a" : "w");
   if (!file) {
     Serial.println(String("Error opening ") + fileName + " for writing");
     return;
@@ -156,6 +156,7 @@ void writeContentToFile(const char *fileName, const String &content) {
   file.print(content);
   file.close();
 }
+
 
 void initializeTFTDisplay() {
   tft.init();
@@ -167,7 +168,7 @@ void initializeTFTDisplay() {
   tft.print("INITIALISING TFT...");
   }
 
-String readFileContent(const char *fileName) {
+String readFromFile(const char *fileName) {
   if (!SPIFFS.exists(fileName)) {
     Serial.println(String("Error opening ") + fileName + " for reading");
     return "";
@@ -179,24 +180,16 @@ String readFileContent(const char *fileName) {
 }
 
 void saveTemperatureHumidityData(float currentTemperature, int currentHumidity) {
-  fs::File file = SPIFFS.open("/data.txt", "a");
-  
-  if (!file) {
-    Serial.println("Error opening data.txt for writing");
-    displayError("091");
-    return;
-  }
-  file.println(String(currentTemperature) + "," + String(currentHumidity) + "   ");
-  file.close();
+  writeToFile("/data.txt", String(currentTemperature) + "," + String(currentHumidity) + "   ", true);
   Serial.println("Data saved to SPIFFS");
 }
 
 void saveIncubatorStatus(bool isIncubatorActive) {
-  writeContentToFile("/set_status.txt", isIncubatorActive ? "1" : "0");
+  writeToFile("/set_status.txt", isIncubatorActive ? "1" : "0", false);
 }
 
 bool getIncubatorStatus() {
-  return readFileContent("/set_status.txt").toInt() == 1;
+  return readFromFile("/set_status.txt").toInt() == 1;
 }
 
 void setupPIDControllers() {
@@ -227,8 +220,8 @@ void controlTrayServo() {
   static bool servoDirection = true;
 
   int interval, servoTurnAngle;
-  interval = readFileContent("/interval.txt").toFloat();
-  servoTurnAngle = readFileContent("/servoTurnAngle.txt").toFloat();
+  interval = readFromFile("/interval.txt").toFloat();
+  servoTurnAngle = readFromFile("/servoTurnAngle.txt").toFloat();
 
   if (millis() - lastTurnTime >= interval) {
     int currentServoPosition = trayServo.read();
@@ -310,8 +303,8 @@ void handleServoSettingsUpdate(AsyncWebServerRequest *request) {
   String angle = request->getParam("angle")->value();
   String interval = request->getParam("interval")->value();
   Serial.println("Received updateServoSettings request with angle: " + angle + " and interval: " + interval);
-  writeContentToFile("/servoTurnAngle.txt", angle);
-  writeContentToFile("/interval.txt", interval);
+  writeToFile("/servoTurnAngle.txt", angle, false);
+  writeToFile("/interval.txt", interval, false);
   request->send(200, "text/plain", "OK");
 }
 
@@ -323,12 +316,12 @@ void pidSettingsUpdate(AsyncWebServerRequest *request) {
   String humKi = request->getParam("humKi")->value();
   String humKd = request->getParam("humKd")->value();
   Serial.println("Received updatePIDSettings request with tempKp: " + tempKp + " tempKi: " + tempKi + " tempKd: " + tempKd + " humKp: " + humKp + " humKi: " + humKi + " humKd: " + humKd);
-  writeContentToFile("/tempKp.txt", tempKp);
-  writeContentToFile("/tempKi.txt", tempKi);
-  writeContentToFile("/tempKd.txt", tempKd);
-  writeContentToFile("/humKp.txt", humKp);
-  writeContentToFile("/humKi.txt", humKi);
-  writeContentToFile("/humKd.txt", humKd);
+  writeToFile("/tempKp.txt", tempKp, false);
+  writeToFile("/tempKi.txt", tempKi, false);
+  writeToFile("/tempKd.txt", tempKd, false);
+  writeToFile("/humKp.txt", humKp, false);
+  writeToFile("/humKi.txt", humKi, false);
+  writeToFile("/humKd.txt", humKd, false);
   request->send(200, "text/plain", "OK");
 }
 
@@ -344,8 +337,8 @@ void handleTemperatureHumiditySettingsUpdate(AsyncWebServerRequest *request) {
 
   Serial.println("Received updateSettings request with temp: " + temp + " and hum: " + hum);
 
-  writeContentToFile("/set_temp.txt", String(targetTemperature));
-  writeContentToFile("/set_hum.txt", String(targetHumidity));
+  writeToFile("/set_temp.txt", String(targetTemperature), false);
+  writeToFile("/set_hum.txt", String(targetHumidity), false);
 
   request->send(200, "text/plain", "OK");
 }
