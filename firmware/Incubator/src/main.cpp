@@ -69,7 +69,6 @@ int16_t         displayWidth  = 160;
 void    initializeStorage();
 void    controlTemperatureRelay(float currentTemperature, float targetTemperature);
 void    controlHumidityVentServo(int currentHumidity, int targetHumidity);
-void    saveIncubatorStatus(bool isIncubatorActive);
 bool    getIncubatorStatus();
 void    initializeWebServer();
 void    connectServos();
@@ -123,7 +122,6 @@ void loadPIDSettings() {
   humKi  = readFromFile("/humKi.txt").toDouble();
   humKd  = readFromFile("/humKd.txt").toDouble();
 }
-
 void wifiManagerSetup() {
 WiFiManager wm;
 if (!wm.autoConnect("AutoConnectAP")) {
@@ -167,10 +165,6 @@ String readFromFile(const char *fileName) {
   String content = file.readString();
   file.close();
   return content;
-}
-
-void saveIncubatorStatus(bool isIncubatorActive) {
-  writeToFile("/set_status.txt", isIncubatorActive ? "1" : "0", false);
 }
 
 bool getIncubatorStatus() {
@@ -331,9 +325,9 @@ void handleTemperatureHumiditySettingsUpdate(AsyncWebServerRequest *request) {
 
 void handleIncubatorStatusToggle(AsyncWebServerRequest *request) {
   bool currentStatus = getIncubatorStatus();
-  saveIncubatorStatus(!currentStatus);
-  String jsonResponse = "{\"status\": " + String(!currentStatus ? "true" : "false") + "}";
-  DebugMessage("Toggled incubator status to: " + String(!currentStatus ? "relayOn" : "relayOff"));
+  writeToFile("/set_status.txt", currentStatus ? "0" : "1");
+  String jsonResponse = "{\"status\": " + String(currentStatus ? "false" : "true") + "}";
+  DebugMessage("Toggled incubator status to: relay" + String(currentStatus ? "Off" : "On"));
   request->send(200, "application/json", jsonResponse);
 }
 
@@ -410,6 +404,6 @@ tft.print("CODE: " + errorCode);
 
 void DebugMessage(String message) {
   if (debugMode) {
-    DebugMessage(message);
+    Serial.println(message);
   }
 }
