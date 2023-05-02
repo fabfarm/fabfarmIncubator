@@ -96,18 +96,14 @@ void    handleServoSettingsUpdate(AsyncWebServerRequest *request);
 void    handleCurrentServoSettingsRequest(AsyncWebServerRequest *request);
 void    handleCurrentPIDSettingsRequest(AsyncWebServerRequest *request);
 void    wifiManagerSetup();
-void    loadPIDSettings();
-void    loadTargetTemperatureAndHumidity();
-void    loadTargetServoSettings();
+void    loadSettings();
 
 void setup() {
   Serial.begin(115200);
   wifiManagerSetup();
   initializeTFTDisplay();
   initializeStorage();
-  loadPIDSettings();
-  loadTargetTemperatureAndHumidity();
-  loadTargetServoSettings();
+  loadSettings();
   initializeWebServer();
   connectServos();
   initializeSensors();
@@ -121,14 +117,19 @@ void loop() {
   runIncubator();
 }
 
-void loadPIDSettings() {
+void loadSettings() {
   tempKp = readFromFile("/tempKp.txt").toDouble();
   tempKi = readFromFile("/tempKi.txt").toDouble();
   tempKd = readFromFile("/tempKd.txt").toDouble();
-  humKp  = readFromFile("/humKp.txt").toDouble();
-  humKi  = readFromFile("/humKi.txt").toDouble();
-  humKd  = readFromFile("/humKd.txt").toDouble();
+  humKp = readFromFile("/humKp.txt").toDouble();
+  humKi = readFromFile("/humKi.txt").toDouble();
+  humKd = readFromFile("/humKd.txt").toDouble();
+  targetTemperature = readFromFile("/set_temp.txt").toFloat();
+  targetHumidity = readFromFile("/set_hum.txt").toInt();
+  servoTurnAngle = readFromFile("/servoTurnAngle.txt").toFloat();
+  servoTurnInterval = readFromFile("/interval.txt").toFloat();
 }
+
 void wifiManagerSetup() {
 WiFiManager wm;
 if (!wm.autoConnect("AutoConnectAP")) {
@@ -136,15 +137,6 @@ debugMessage("Failed to connect");
 ESP.restart();
 }
 debugMessage("Connected to WiFi");
-}
-
-void loadTargetTemperatureAndHumidity() {
-  targetTemperature = readFromFile("/set_temp.txt").toFloat();
-  targetHumidity = readFromFile("/set_hum.txt").toInt();
-}
-void loadTargetServoSettings() {
-  servoTurnAngle = readFromFile("/servoTurnAngle.txt").toFloat();
-  servoTurnInterval = readFromFile("/interval.txt").toFloat();
 }
 
 void writeToFile(const char *fileName, const String &content, bool append) {
@@ -435,4 +427,4 @@ void debugMessage(String message) {
     Serial.println(message);
   }
 }
-//last time I checked we had 410 lines of code
+//last time I checked we had 410 lines of code now 430

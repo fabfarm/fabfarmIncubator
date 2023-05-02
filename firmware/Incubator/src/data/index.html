@@ -43,6 +43,12 @@
   <br>
   <h1>ESP32 S3 Incubator Control</h1>
   <section>
+    <fieldset>
+      <legend>Sensor Data</legend>
+      <p id="sensorData">Temperature: N/A °C | Humidity: N/A %</p>
+    </fieldset>
+  </section>
+  <section>
     <form id="settingsForm" onsubmit="submitForm(event, 'updateSettings', updateSettings)">
       <fieldset>
         <legend>Temperature and Humidity Settings</legend>
@@ -105,15 +111,9 @@
   </section>
   <section>
     <fieldset>
-      <legend>Data</legend>
-      <button id="fetchData">Fecth Data</button>
+      <legend>Stored Data</legend>
+      <button id="fetchData">Fecth</button>
       <textarea id="dataTextArea" rows="10" cols="30" readonly></textarea>
-    </fieldset>
-  </section>
-  <section>
-    <fieldset>
-      <legend>Data</legend>
-      <p id="sensorData">Temperature: N/A °C | Humidity: N/A %</p>
     </fieldset>
   </section>
   <script>
