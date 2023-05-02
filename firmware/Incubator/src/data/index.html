@@ -1,4 +1,22 @@
-<!DOCTYPE html>
+<css>
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+  }
+  form {
+    margin-bottom: 20px;
+  } 
+  input[type="number"] {
+    width: 50%;
+  }
+  @media screen and (max-width: 768px) {
+    input[type="number"] {
+      width: 80%;
+    }
+  }
+</css>
+
+<!DOCTYPE html> 
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -18,61 +36,71 @@
   <br>
   <br>
   <h1>ESP32 S3 Incubator Control</h1>
-  <h3>Temperature and Humidity Settings</h3>
-  <form id="settingsForm"       onsubmit="submitForm(event, 'updateSettings', updateSettings)">
-    <label for="temp">Temperature:</label>
-    <input type="number" id="temp" name="temp" step="0.01">
-    <br>
-    <label for="hum">Humidity:</label>
-    <input type="number" id="hum" name="hum">
-    <br>
-    <button type="submit">Update Settings</button>
-  </form>
-  <br>
-  <h3>Servo Settings</h3>
-  <form id="servoSettingsForm"  onsubmit="submitForm(event, 'updateServoSettings', updateServoSettings)">
-    <label for="angle">Servo Turn Angle:</label>
-    <input type="number" id="angle" name="angle" step="any" min="0" max="180">
-    <br>
-    <label for="interval">Servo Turn Interval:</label>
-    <input type="number" id="interval" name="interval" min="0">
-    <br>
-    <button type="submit">Update Servo Settings</button>
-  </form>
-  <br>
-  <h3>PID Settings</h3>
-  <form id="pidSettingsForm"    onsubmit="submitForm(event, 'updatePIDSettings', updatePIDSettings)">
-    <label for="tempKp">Temp Kp:</label>
-    <input type="number" id="tempKp" name="tempKp" step="0.01">
-    <br>
-    <label for="tempKi">Temp Ki:</label>
-    <input type="number" id="tempKi" name="tempKi" step="0.01">
-    <br>
-    <label for="tempKd">Temp Kd:</label>
-    <input type="number" id="tempKd" name="tempKd" step="0.01">
-    <br>
-    <label for="humKp">Hum Kp:</label>
-    <input type="number" id="humKp" name="humKp" step="0.01">
-    <br>
-    <label for="humKi">Hum Ki:</label>
-    <input type="number" id="humKi" name="humKi" step="0.01">
-    <br>
-    <label for="humKd">Hum Kd:</label>
-    <input type="number" id="humKd" name="humKd" step="0.01">
-    <br>
-    <button type="submit">Update PID Settings</button>
-  </form>
-  <br>
-  <br>
-  <button onclick="toggleIncubator()">Toggle Incubator</button>
-  <p id="incubatorStatus">Status: Unknown</p>
-  <br>
-  <br>
-  <button onclick="fetchData()">Fetch Data</button>
-  <br>
-  <textarea id="dataTextArea" rows="10" cols="30" readonly></textarea>
-  <br>
-  <p id="sensorData">Temperature: N/A °C | Humidity: N/A %</p>
+  <section>
+    <form id="settingsForm"       onsubmit="submitForm(event, 'updateSettings', updateSettings)">
+      <fieldset>
+        <legend>Temperature and Humidity Settings</legend>
+        <label for="temp">Temperature:</label>
+        <input type="number" id="temp" name="temp" step="0.01">
+        <br>
+        <label for="hum">Humidity:</label>
+        <input type="number" id="hum" name="hum">
+        <br>
+        <button type="submit">Update Settings</button>
+      </fieldset>
+    </form>
+  </section>
+  <section>
+    <form id="servoSettingsForm"  onsubmit="submitForm(event, 'updateServoSettings', updateServoSettings)">
+      <fieldset>
+        <legend>Servo Settings</legend>
+        <label for="angle">Servo Turn Angle:</label>
+        <input type="number" id="angle" name="angle" step="any" min="0" max="180">
+        <br>
+        <label for="interval">Servo Turn Interval:</label>
+        <input type="number" id="interval" name="interval" min="0">
+        <br>
+        <button type="submit">Update Servo Settings</button>
+      </fieldset>
+    </form>
+  </section>
+  <section>
+    <form id="pidSettingsForm"    onsubmit="submitForm(event, 'updatePIDSettings', updatePIDSettings)">
+      <fieldset>
+        <legend>PID Settings</legend>
+        <label for="tempKp">Temp Kp:</label>
+        <input type="number" id="tempKp" name="tempKp" step="0.01">
+        <br>
+        <label for="tempKi">Temp Ki:</label>
+        <input type="number" id="tempKi" name="tempKi" step="0.01">
+        <br>
+        <label for="tempKd">Temp Kd:</label>
+        <input type="number" id="tempKd" name="tempKd" step="0.01">
+        <br>
+        <label for="humKp">Hum Kp:</label>
+        <input type="number" id="humKp" name="humKp" step="0.01">
+        <br>
+        <label for="humKi">Hum Ki:</label>
+        <input type="number" id="humKi" name="humKi" step="0.01">
+        <br>
+        <label for="humKd">Hum Kd:</label>
+        <input type="number" id="humKd" name="humKd" step="0.01">
+        <br>
+        <button type="submit">Update PID Settings</button>
+      </fieldset>
+    </form>
+  </section>
+  <section>
+      <button onclick="toggleIncubator()">Toggle Incubator</button>
+      <p id="incubatorStatus">Status: Unknown</p>
+      <br>
+      <br>
+      <button onclick="fetchData()">Fetch Data</button>
+      <br>
+      <textarea id="dataTextArea" rows="10" cols="30" readonly></textarea>
+      <br>
+      <p id="sensorData">Temperature: N/A °C | Humidity: N/A %</p>
+  </section>
   <script>
     function submitForm(event, endpoint, callback) {
       event.preventDefault();
