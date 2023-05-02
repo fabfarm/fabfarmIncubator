@@ -1,22 +1,4 @@
-<css>
-  body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-  }
-  form {
-    margin-bottom: 20px;
-  } 
-  input[type="number"] {
-    width: 50%;
-  }
-  @media screen and (max-width: 768px) {
-    input[type="number"] {
-      width: 80%;
-    }
-  }
-</css>
-
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -25,19 +7,43 @@
   <meta name="keywords" content="ESP32, S3, Incubator, Control, Web Application">
   <title>ESP32 S3 Incubator Control</title>
   <style>
-    body {font-family: Arial, sans-serif; text-align: center;}
-    input[type="number"] {width: 50%;}
-    @media screen and (max-width: 768px) {
-      input[type="number"] {width: 80%;}
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    form {
+      margin: 1em 0;
+    }
+    fieldset {
+      margin-bottom: 1em;
+      border: 3px solid black;
+      max-width: 300px;
+    }
+    input[type="number"] {
+      width: 80%;
+      max-width: 80px;
+    }
+    textarea {
+      width: 80%;
+      max-width: 300px;
+    }
+    @media screen and (min-width: 768px) {
+      input[type="number"], textarea {
+        width: 50%;
+      }
     }
   </style>
+</head>
 </head>
 <body>
   <br>
   <br>
   <h1>ESP32 S3 Incubator Control</h1>
   <section>
-    <form id="settingsForm"       onsubmit="submitForm(event, 'updateSettings', updateSettings)">
+    <form id="settingsForm" onsubmit="submitForm(event, 'updateSettings', updateSettings)">
       <fieldset>
         <legend>Temperature and Humidity Settings</legend>
         <label for="temp">Temperature:</label>
@@ -91,15 +97,24 @@
     </form>
   </section>
   <section>
-      <button onclick="toggleIncubator()">Toggle Incubator</button>
+    <fieldset>
+      <legend>Incubator Operation</legend>
+      <button id="toggleIncubatorBtn">Toggle Incubator</button>
       <p id="incubatorStatus">Status: Unknown</p>
-      <br>
-      <br>
-      <button onclick="fetchData()">Fetch Data</button>
-      <br>
+    </fieldset>
+  </section>
+  <section>
+    <fieldset>
+      <legend>Data</legend>
+      <button id="fetchData">Fecth Data</button>
       <textarea id="dataTextArea" rows="10" cols="30" readonly></textarea>
-      <br>
+    </fieldset>
+  </section>
+  <section>
+    <fieldset>
+      <legend>Data</legend>
       <p id="sensorData">Temperature: N/A °C | Humidity: N/A %</p>
+    </fieldset>
   </section>
   <script>
     function submitForm(event, endpoint, callback) {
@@ -198,20 +213,19 @@
           console.error('There was a problem with the fetch operation:', error);
         });
     }
-    function fetchData() {
-      fetch('/fetchData')
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          return response.text();
-        })
-        .then(data => {
-          document.getElementById('dataTextArea').innerText = data;
-        })
-        .catch(error => {
-          console.error('There was a problem with the fetch operation:', error);
-        });
+    async function fetchData() {
+      try {
+        const response = await fetch('/fetchData');
+
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+
+        const data = await response.text();
+        document.getElementById('dataTextArea').innerText = data;
+      } catch (error) {
+        console.error('There was a problem with the fetch operation:', error);
+      }
     }
     function fetchSensorData() {
       fetch('/getSensorData')
@@ -233,6 +247,8 @@
         fetchSensorData();
       }, interval);
     }
+    document.getElementById('toggleIncubatorBtn').addEventListener('click', toggleIncubator);
+    document.getElementById('fetchData').addEventListener('click', fetchData);
     // Start updating sensor data every 5 seconds (5000 milliseconds)
     startSensorDataUpdate(5000);
     fetchAllSettings();
