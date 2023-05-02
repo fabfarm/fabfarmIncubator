@@ -3,15 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A simple web application to control an ESP32 S3 incubator">
+  <meta name="keywords" content="ESP32, S3, Incubator, Control, Web Application">
   <title>ESP32 S3 Incubator Control</title>
   <style>
     body {font-family: Arial, sans-serif; text-align: center;}
     input[type="number"] {width: 50%;}
+    @media screen and (max-width: 768px) {
+      input[type="number"] {width: 80%;}
+    }
   </style>
 </head>
 <body>
+  <br>
+  <br>
   <h1>ESP32 S3 Incubator Control</h1>
-  <form id="settingsForm" onsubmit="updateSettings(event)">
+  <h3>Temperature and Humidity Settings</h3>
+  <form id="settingsForm"       onsubmit="submitForm(event, 'updateSettings', updateSettings)">
     <label for="temp">Temperature:</label>
     <input type="number" id="temp" name="temp" step="0.01">
     <br>
@@ -20,16 +28,45 @@
     <br>
     <button type="submit">Update Settings</button>
   </form>
-  <label for="angle">Servo Turn Angle:</label>
-<input type="number" id="angle" name="angle" step="any" min="0" max="180">
-<br>
-<label for="interval">Servo Turn Interval:</label>
-<input type="number" id="interval" name="interval" min="0">
-<br>
-<button type="button" onclick="updateServoSettings()">Update Servo Settings</button>
-
+  <br>
+  <h3>Servo Settings</h3>
+  <form id="servoSettingsForm"  onsubmit="submitForm(event, 'updateServoSettings', updateServoSettings)">
+    <label for="angle">Servo Turn Angle:</label>
+    <input type="number" id="angle" name="angle" step="any" min="0" max="180">
+    <br>
+    <label for="interval">Servo Turn Interval:</label>
+    <input type="number" id="interval" name="interval" min="0">
+    <br>
+    <button type="submit">Update Servo Settings</button>
+  </form>
+  <br>
+  <h3>PID Settings</h3>
+  <form id="pidSettingsForm"    onsubmit="submitForm(event, 'updatePIDSettings', updatePIDSettings)">
+    <label for="tempKp">Temp Kp:</label>
+    <input type="number" id="tempKp" name="tempKp" step="0.01">
+    <br>
+    <label for="tempKi">Temp Ki:</label>
+    <input type="number" id="tempKi" name="tempKi" step="0.01">
+    <br>
+    <label for="tempKd">Temp Kd:</label>
+    <input type="number" id="tempKd" name="tempKd" step="0.01">
+    <br>
+    <label for="humKp">Hum Kp:</label>
+    <input type="number" id="humKp" name="humKp" step="0.01">
+    <br>
+    <label for="humKi">Hum Ki:</label>
+    <input type="number" id="humKi" name="humKi" step="0.01">
+    <br>
+    <label for="humKd">Hum Kd:</label>
+    <input type="number" id="humKd" name="humKd" step="0.01">
+    <br>
+    <button type="submit">Update PID Settings</button>
+  </form>
+  <br>
+  <br>
   <button onclick="toggleIncubator()">Toggle Incubator</button>
   <p id="incubatorStatus">Status: Unknown</p>
+  <br>
   <br>
   <button onclick="fetchData()">Fetch Data</button>
   <br>
@@ -37,14 +74,16 @@
   <br>
   <p id="sensorData">Temperature: N/A °C | Humidity: N/A %</p>
   <script>
-    function updateSettings(event) {
+    function submitForm(event, endpoint, callback) {
       event.preventDefault();
-      const temp = document.getElementById('temp').value;
-      const hum = document.getElementById('hum').value;
+      const formData = new FormData(event.target);
+      const searchParams = new URLSearchParams();
 
-      console.log('updateSettings called with temp:', temp, 'hum:', hum);
+      for (const [key, value] of formData.entries()) {
+        searchParams.append(key, value);
+      }
 
-      fetch(`/updateSettings?temp=${temp}&hum=${hum}`)
+      fetch(`/${endpoint}?${searchParams.toString()}`)
         .then(response => {
           if (!response.ok) {
             throw new Error('Network response was not ok');
@@ -52,31 +91,69 @@
           return response.text();
         })
         .then(data => {
-          console.log('Settings update response:', data);
+          console.log(`${endpoint} response:`, data);
+          callback();
+        })
+        .catch(error => {
+          console.error(`There was a problem with the ${endpoint} fetch operation:`, error);
+        });
+    }
+    function updateSettings() {}
+    function updateServoSettings() {}
+    function updatePIDSettings() {}
+    function updateInputFields(id, value) {
+      document.getElementById(id).value = value;
+    }
+    function fetchAllSettings() {
+      fetch('/getCurrentSettings')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          updateInputFields('temp', data.temp);
+          updateInputFields('hum', data.hum);
+        })
+        .catch(error => {
+          console.error('There was a problem with the fetch operation:', error);
+        });
+
+      fetch('/getCurrentServoSettings')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          updateInputFields('angle', data.angle);
+          updateInputFields('interval', data.interval);
+        })
+        .catch(error => {
+          console.error('There was a problem with the fetch operation:', error);
+        });
+
+      fetch('/getCurrentPIDSettings')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          updateInputFields('tempKp', data.tempKp);
+          updateInputFields('tempKi', data.tempKi);
+          updateInputFields('tempKd', data.tempKd);
+          updateInputFields('humKp', data.humKp);
+          updateInputFields('humKi', data.humKi);
+          updateInputFields('humKd', data.humKd);
         })
         .catch(error => {
           console.error('There was a problem with the fetch operation:', error);
         });
     }
-    function updateServoSettings() {
-  const angle = document.getElementById("angle").value;
-  const interval = document.getElementById("interval").value;
-
-  fetch(`/updateServoSettings?angle=${angle}&interval=${interval}`)
-    .then((response) => {
-      if (response.ok) {
-        alert("Servo settings updated successfully!");
-      } else {
-        alert("Error updating servo settings.");
-      }
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-      alert("Error updating servo settings.");
-    });
-}
-
-
     function toggleIncubator() {
       fetch('/toggleIncubator')
         .then(response => {
@@ -93,7 +170,6 @@
           console.error('There was a problem with the fetch operation:', error);
         });
     }
-
     function fetchData() {
       fetch('/fetchData')
         .then(response => {
@@ -109,7 +185,6 @@
           console.error('There was a problem with the fetch operation:', error);
         });
     }
-
     function fetchSensorData() {
       fetch('/getSensorData')
         .then(response => {
@@ -125,15 +200,14 @@
           console.error('There was a problem with the fetch operation:', error);
         });
     }
-
     function startSensorDataUpdate(interval) {
       setInterval(() => {
         fetchSensorData();
       }, interval);
     }
-
     // Start updating sensor data every 5 seconds (5000 milliseconds)
     startSensorDataUpdate(5000);
+    fetchAllSettings();
   </script>
 </body>
 </html>
