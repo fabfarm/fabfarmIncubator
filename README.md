@@ -1,78 +1,65 @@
-# FabFarm Incubator
+# Fabfarm Egg Incubator
 
-This project is an incubator controller for maintaining temperature and humidity levels based on the user's requirements. It uses an Arduino and ESP32 board with various sensors and modules to achieve this goal.
+This is the code repository for the Fabfarm Egg Incubator, a project for controlling and monitoring the temperature, humidity, and egg tray position inside an egg incubator.
 
 ## Features
 
-- Temperature and Humidity Sensing
-- Heater Control (relay)
-- Ventilation Control (servo)
-- LCD Display
-- Web-based User Interface
-- OTA Updates
+- Temperature control using a relay
+- Humidity control using a vent servo
+- Egg tray rotation using a tray servo
+- Sensor data display on a TFT screen
+- Web interface for configuration and data visualization
+- Data logging to SPIFFS
+- PID control for temperature and humidity
 
-## Hardware Components
+## Hardware Requirements
 
-- ESP32 Board
-- DHT11 or BME280 Temperature and Humidity Sensor
-- TFT_eSPI Display
-- Servo Motor
-- Relay Module
+- ESP32 microcontroller
+- BME280 temperature, humidity and pressure sensor
+- Relay module for temperature control
+- Servo motor for vent control (humidity)
+- Servo motor for tray rotation
+- TFT display (ILI9341 based)
 
-## Libraries Used
+## Software Dependencies
 
-- Wire
-- DHT
-- Adafruit_BME280
-- WiFi
-- ESP32Servo
-- AsyncElegantOTA
-- TFT_eSPI
-- SPI
-- FS
-- SPIFFS
-- ESPAsyncWebServer
+- Arduino IDE
+- Adafruit BME280 library
+- ESP32Servo library
+- TFT_eSPI library
+- ESPAsyncWebServer library
+- WiFiManager library
+- FS.h, SPIFFS.h, and SPI.h libraries (built-in)
+- PID_v1 library
 
 ## Getting Started
 
-1. Clone this repository.
-2. Install the required libraries.
-3. Open the project in the Arduino IDE.
-4. Modify the `WIFI_SSID` and `WIFI_PASSWORD` constants to match your network credentials.
-5. Change the `deviceName` constant to a unique name for your device.
-6. Connect your ESP32 board and upload the code.
-7. Open the Serial Monitor to check if the ESP32 is connected to the WiFi network.
-8. Access the web interface by entering the IP address displayed in the Serial Monitor in your browser.
+1. Clone this repository to your local machine.
+2. Open the project folder ./firmware using platformio.
+3. Platformio will install the required libraries mentioned in the Software Dependencies section.
+4. Connect the hardware components as described in the Hardware Requirements section.
+5. Upload the code to the ESP32 microcontroller.
+6. In first time connect to the "AutoConnectAP" Wi-Fi network and configure the Wi-Fi settings.
+7. Access the web interface by navigating to the IP address displayed on the TFT screen.
+8. Configure temperature, humidity, and servo settings using the web interface.
+9. Monitor the incubator data on the web interface and TFT screen.
 
-## Usage
+## Functionality Overview
 
-1. Set the desired temperature and humidity values in the web interface.
-2. Monitor the actual temperature and humidity values on the LCD display.
-3. The system will control the heater and ventilation based on the desired values.
-4. Use the web interface to pause or resume the incubator.
-
-## Troubleshooting
-
-Error codes may be displayed on the TFT screen. Check the `errorWithCode` function in the code for more information on specific error codes.
+- The incubator monitors and controls temperature and humidity using a BME280 sensor and a relay and servo motor, respectively.
+- The egg tray position is controlled by a servo motor, which rotates the tray at regular intervals.
+- Sensor data is displayed on the TFT screen and logged to the ESP32's SPIFFS memory.
+- A web interface is provided for configuring temperature, humidity, and servo settings, as well as for visualizing logged data.
+- The system can be paused or resumed using the web interface.
 
 ## Contributing
 
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+Feel free to fork this repository and submit pull requests for bug fixes, improvements, or new features. Please ensure that your code follows the existing style and structure.
 
 ## License
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for more information.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more information.
 
-## To Do
+## Acknowledgements
 
-1. A PID (Proportional-Integral-Derivative) control algorithm for more accurate temperature and humidity control.
-2. Data logging to an external storage like an SD card, or sending data to a remote server for long-term storage and analysis.
-3. Email or push notifications when the incubator temperature or humidity goes out of range or there is a system error.
-4. Incorporate a real-time clock (RTC) module to maintain accurate timekeeping, which can be helpful for time-stamped data logging.
-5. A battery backup system to ensure continuous operation during power outages.
-6. A user interface to change settings directly on the device without using a web server.
-7. Security improvements, such as password protection or authentication, for the web server.
-8. Manual controls: buttons to manually increase or decrease the temperature and humidity settings
-9. 
-
-
+This project was written by Lucio.
