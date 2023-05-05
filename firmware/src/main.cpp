@@ -21,8 +21,8 @@ float     currentPressure     = 0.0;
 float     currentTemperature  = 0.0;
 float     targetTemperature   = 0.0;
 int       targetHumidity      = 0;
-float     servoTurnInterval            = 0;
-float     servoTurnAngle               = 0;
+float     servoTurnInterval   = 0;
+float     servoTurnAngle      = 0;
 
 // Temperature in Celsius
 float     minTemperature      = 0.0;    
