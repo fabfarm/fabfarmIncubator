@@ -13,6 +13,7 @@
 #include <SPIFFS.h>
 #include <ESPAsyncWebServer.h>
 #include <PID_v1.h>
+#include "NotoSansBold15.h"
 
 bool      debugMode           = true;
 int       currentHumidity     = 0;
@@ -67,6 +68,9 @@ int16_t         displayWidth  = 160;
 #define       BLACK            0x0000
 #define       WHITE            0xFFFF
 #define       RED              0xF800
+
+#define       notoFont            NotoSansBold15
+
 
 void    initializeStorage();
 void    controlTemperatureRelay(float currentTemperature, float targetTemperature);
@@ -153,6 +157,7 @@ void initializeTFTDisplay() {
   tft.init();
   tft.setRotation(1);
   tft.fillScreen(BLACK);
+  tft.loadFont(notoFont);
   tft.setTextSize(2);
   tft.setTextColor(WHITE, BLACK);
   tft.setCursor(0, 0);
