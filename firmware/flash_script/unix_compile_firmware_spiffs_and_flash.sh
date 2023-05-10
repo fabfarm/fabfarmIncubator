@@ -1,8 +1,15 @@
 #!/bin/bash
-# run PlatformIO build target for building file system image
+
+# 1st - run `usbipd wsl list` first to find the BUSID of the device that looks like:
+# USB Serial Device (COM3), USB JTAG/serial debug unit          Attached - Ubuntu
+
+# 2nd - run this in powershell to connect device: `usbipd wsl attach -b <INSERT-BUSID-HERE> -d Ubuntu`
+
+# this needs to be run in the shell script, make sure you have pip installed
 pip3 install esptool
 
 while true; do
+  # run PlatformIO build target for building file system image
   platformio run --target buildfs --environment T-QT-Pro-N4R2
 
   # use esptool to flash the firmware and SPIFFS image to the ESP32-S3,
