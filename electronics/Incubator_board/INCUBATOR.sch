@@ -973,32 +973,29 @@
 </deviceset>
 </devicesets>
 </library>
-<library name="IRF3205">
+<library name="TO92127P520H700-3">
 <packages>
-<package name="TO254P1041X444X2933-3">
-<wire x1="7.7475" y1="3.033" x2="7.7475" y2="-1.412" width="0.127" layer="51"/>
-<wire x1="7.7475" y1="-1.412" x2="-2.6675" y2="-1.412" width="0.127" layer="51"/>
-<wire x1="-2.6675" y1="-1.412" x2="-2.6675" y2="3.033" width="0.127" layer="51"/>
-<wire x1="-2.6675" y1="3.033" x2="7.7475" y2="3.033" width="0.127" layer="51"/>
-<wire x1="7.7475" y1="3.033" x2="7.7475" y2="-1.412" width="0.127" layer="21"/>
-<wire x1="7.7475" y1="-1.412" x2="-2.6675" y2="-1.412" width="0.127" layer="21"/>
-<wire x1="-2.6675" y1="-1.412" x2="-2.6675" y2="3.033" width="0.127" layer="21"/>
-<wire x1="-2.6675" y1="3.033" x2="7.7475" y2="3.033" width="0.127" layer="21"/>
-<wire x1="7.9975" y1="3.283" x2="7.9975" y2="-1.662" width="0.05" layer="39"/>
-<wire x1="7.9975" y1="-1.662" x2="-2.9175" y2="-1.662" width="0.05" layer="39"/>
-<wire x1="-2.9175" y1="-1.662" x2="-2.9175" y2="3.283" width="0.05" layer="39"/>
-<wire x1="-2.9175" y1="3.283" x2="7.9975" y2="3.283" width="0.05" layer="39"/>
-<text x="-2.71" y="3.5" size="1.27" layer="25">&gt;NAME</text>
-<text x="-2.71" y="-2.25" size="1.27" layer="27" align="top-left">&gt;VALUE</text>
-<circle x="0" y="-2" radius="0.1" width="0.2" layer="21"/>
-<circle x="0" y="-2" radius="0.1" width="0.2" layer="51"/>
-<pad name="1" x="0" y="0" drill="1.23" diameter="1.85" shape="square"/>
-<pad name="2" x="2.54" y="0" drill="1.23" diameter="1.85"/>
-<pad name="3" x="5.08" y="0" drill="1.23" diameter="1.85"/>
+<package name="TO92127P520H700-3">
+<wire x1="-1.661" y1="-2.3" x2="1.661" y2="-2.3" width="0.127" layer="51"/>
+<wire x1="-1.661" y1="-2.3" x2="1.661" y2="-2.3" width="0.127" layer="51" curve="-280.2"/>
+<wire x1="-1.661" y1="-2.3" x2="1.661" y2="-2.3" width="0.127" layer="21"/>
+<wire x1="-1.661" y1="-2.3" x2="1.661" y2="-2.3" width="0.127" layer="21" curve="-280.2"/>
+<wire x1="-2.85" y1="-2.55" x2="2.85" y2="-2.55" width="0.05" layer="39"/>
+<wire x1="-2.85" y1="-2.55" x2="-2.85" y2="-0.3" width="0.05" layer="39"/>
+<wire x1="2.85" y1="-2.55" x2="2.85" y2="-0.3" width="0.05" layer="39"/>
+<wire x1="-2.85" y1="-0.3" x2="2.85" y2="-0.3" width="0.05" layer="39" curve="-180"/>
+<circle x="-1.4" y="-3.1" radius="0.1" width="0.3" layer="21"/>
+<circle x="-1.4" y="-3.1" radius="0.1" width="0.3" layer="51"/>
+<text x="-3.81" y="2.54" size="1.778" layer="25">&gt;NAME</text>
+<text x="-3.81" y="-5.08" size="1.778" layer="27">&gt;VALUE</text>
+<pad name="S" x="-1.27" y="0" drill="0.6"/>
+<pad name="G" x="0" y="0" drill="0.6"/>
+<pad name="D" x="1.27" y="0" drill="0.6"/>
 </package>
 </packages>
 <symbols>
-<symbol name="IRF3205">
+<symbol name="NMOS-FET-E">
+<description>MOSFET N-channel - Enhancement mode</description>
 <wire x1="0.762" y1="0.762" x2="0.762" y2="0" width="0.254" layer="94"/>
 <wire x1="0.762" y1="0" x2="0.762" y2="-0.762" width="0.254" layer="94"/>
 <wire x1="0.762" y1="3.175" x2="0.762" y2="2.54" width="0.254" layer="94"/>
@@ -1013,51 +1010,42 @@
 <wire x1="3.81" y1="0.508" x2="3.81" y2="-2.54" width="0.1524" layer="94"/>
 <wire x1="2.54" y1="-2.54" x2="3.81" y2="-2.54" width="0.1524" layer="94"/>
 <wire x1="0.762" y1="2.54" x2="3.81" y2="2.54" width="0.1524" layer="94"/>
-<wire x1="4.572" y1="0.762" x2="4.318" y2="0.508" width="0.1524" layer="94"/>
-<wire x1="4.318" y1="0.508" x2="3.81" y2="0.508" width="0.1524" layer="94"/>
-<wire x1="3.81" y1="0.508" x2="3.302" y2="0.508" width="0.1524" layer="94"/>
-<wire x1="3.302" y1="0.508" x2="3.048" y2="0.254" width="0.1524" layer="94"/>
-<circle x="2.54" y="-2.54" radius="0.3592" width="0" layer="94"/>
-<circle x="2.54" y="2.54" radius="0.3592" width="0" layer="94"/>
-<text x="-8.89" y="-7.62" size="1.778" layer="96">&gt;VALUE</text>
-<text x="-8.89" y="2.54" size="1.778" layer="95">&gt;NAME</text>
+<wire x1="3.302" y1="0.508" x2="3.81" y2="0.508" width="0.1524" layer="94"/>
+<wire x1="3.81" y1="0.508" x2="4.318" y2="0.508" width="0.1524" layer="94"/>
+<circle x="2.54" y="-2.54" radius="0.254" width="0" layer="94"/>
+<circle x="2.54" y="2.54" radius="0.254" width="0" layer="94"/>
+<text x="-11.43" y="3.81" size="1.778" layer="96" rot="MR180">&gt;VALUE</text>
+<text x="-11.43" y="1.27" size="1.778" layer="95" rot="MR180">&gt;NAME</text>
+<pin name="SOURCE" x="2.54" y="-5.08" visible="off" length="short" direction="pas" rot="R90"/>
+<pin name="GATE" x="-2.54" y="-2.54" visible="off" length="short" direction="pas"/>
+<pin name="DRAIN" x="2.54" y="5.08" visible="off" length="short" direction="pas" rot="R270"/>
+<polygon width="0.1524" layer="94">
+<vertex x="1.016" y="0"/>
+<vertex x="2.032" y="0.508"/>
+<vertex x="2.032" y="-0.508"/>
+</polygon>
 <polygon width="0.1524" layer="94">
 <vertex x="3.81" y="0.508"/>
 <vertex x="3.302" y="-0.254"/>
 <vertex x="4.318" y="-0.254"/>
 </polygon>
-<polygon width="0.1524" layer="94">
-<vertex x="1.016" y="0"/>
-<vertex x="2.032" y="0.762"/>
-<vertex x="2.032" y="-0.762"/>
-</polygon>
-<pin name="S" x="2.54" y="-5.08" visible="off" length="short" direction="pas" rot="R90"/>
-<pin name="G" x="-2.54" y="-2.54" visible="off" length="short" direction="pas"/>
-<pin name="D" x="2.54" y="5.08" visible="off" length="short" direction="pas" rot="R270"/>
 </symbol>
 </symbols>
 <devicesets>
-<deviceset name="IRF3205" prefix="Q">
-<description>N-Channel 55V 75A (Tc) 170W (Tc) Through Hole TO-220AB  &lt;a href="https://pricing.snapeda.com/parts/IRF3205/Infineon%20Technologies/view-part?ref=eda"&gt;Check availability&lt;/a&gt;</description>
+<deviceset name="TN0702N3-G">
+<description>TN0702 N-Channel Enhancement-Mode Vertical DMOS FET from Supertex Inc.</description>
 <gates>
-<gate name="G$1" symbol="IRF3205" x="0" y="0"/>
+<gate name="G$1" symbol="NMOS-FET-E" x="0" y="0"/>
 </gates>
 <devices>
-<device name="" package="TO254P1041X444X2933-3">
+<device name="" package="TO92127P520H700-3">
 <connects>
-<connect gate="G$1" pin="D" pad="2"/>
-<connect gate="G$1" pin="G" pad="1"/>
-<connect gate="G$1" pin="S" pad="3"/>
+<connect gate="G$1" pin="DRAIN" pad="D"/>
+<connect gate="G$1" pin="GATE" pad="G"/>
+<connect gate="G$1" pin="SOURCE" pad="S"/>
 </connects>
 <technologies>
-<technology name="">
-<attribute name="AVAILABILITY" value="Not in stock"/>
-<attribute name="DESCRIPTION" value=" N-Channel 55V 110A (Tc) 200W (Tc) Through Hole TO-220AB "/>
-<attribute name="MF" value="Infineon Technologies"/>
-<attribute name="MP" value="IRF3205"/>
-<attribute name="PACKAGE" value="TO-220 Infineon"/>
-<attribute name="PRICE" value="None"/>
-</technology>
+<technology name=""/>
 </technologies>
 </device>
 </devices>
@@ -1078,7 +1066,7 @@
 <parts>
 <part name="GND20" library="SparkFun" deviceset="GND" device=""/>
 <part name="U$13" library="12v" deviceset="12V" device=""/>
-<part name="Q1" library="IRF3205" deviceset="IRF3205" device="" value="RFP30N06LE"/>
+<part name="Q1" library="TO92127P520H700-3" deviceset="TN0702N3-G" device="" value="RFP30N06LE"/>
 <part name="R6" library="ipc-7351-resistor" deviceset="RESISTOR_" device="0805" value="100k"/>
 <part name="GND28" library="SparkFun" deviceset="GND" device=""/>
 <part name="R36" library="ipc-7351-resistor" deviceset="RESISTOR_" device="0805" value="220"/>
@@ -1177,7 +1165,7 @@
 <segment>
 <wire x1="50.8" y1="63.5" x2="50.8" y2="55.88" width="0.1524" layer="91"/>
 <pinref part="GND20" gate="1" pin="GND"/>
-<pinref part="Q1" gate="G$1" pin="S"/>
+<pinref part="Q1" gate="G$1" pin="SOURCE"/>
 </segment>
 <segment>
 <pinref part="R6" gate="G$1" pin="2"/>
@@ -1232,13 +1220,13 @@
 <wire x1="50.8" y1="73.66" x2="54.61" y2="73.66" width="0.1524" layer="91"/>
 <wire x1="54.61" y1="73.66" x2="54.61" y2="68.58" width="0.1524" layer="91"/>
 <wire x1="54.61" y1="68.58" x2="60.96" y2="68.58" width="0.1524" layer="91"/>
-<pinref part="Q1" gate="G$1" pin="D"/>
+<pinref part="Q1" gate="G$1" pin="DRAIN"/>
 <pinref part="RESITANCEWIRE" gate="-2" pin="S"/>
 </segment>
 </net>
 <net name="N$71" class="0">
 <segment>
-<pinref part="Q1" gate="G$1" pin="G"/>
+<pinref part="Q1" gate="G$1" pin="GATE"/>
 <pinref part="R36" gate="G$1" pin="2"/>
 <wire x1="43.18" y1="68.58" x2="45.72" y2="66.04" width="0.1524" layer="91"/>
 </segment>

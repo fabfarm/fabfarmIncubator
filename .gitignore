@@ -4,5 +4,5 @@
 *.job
 *.pro
 firmware/.vscode/*
-firmware/.vscode/settings.json
 firmware/client/*
+*.l#1

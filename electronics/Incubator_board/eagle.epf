@@ -270,6 +270,8 @@ UsedLibrary="D:/gits_go_here/satshakit-grbl/eagle/no_serial_screw_connectors/Lib
 UsedLibrary="D:/gits_go_here/satshakit-grbl/eagle/no_serial_screw_connectors/Library/SparkFun-RF.lbr"
 UsedLibrary="D:/gits_go_here/satshakit-grbl/eagle/no_serial_screw_connectors/Library/fab.lbr"
 UsedLibrary="D:/gits_go_here/satshakit-grbl/eagle/no_serial_screw_connectors/Library/jumper.lbr"
+UsedLibrary="D:/gits_go_here/fabfarmIncubator/electronics/libraries/IRF3205.lbr"
+UsedLibrary="D:/gits_go_here/fabfarmIncubator/electronics/libraries/TO92127P520H700-3.lbr"
 
 [Win_1]
 Type="Control Panel"
