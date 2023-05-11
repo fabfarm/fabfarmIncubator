@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Put css classes in here that style native HTML elements */
+}
+
+@layer components {
+  /* Put css classes in here that are reusable */
+}
+
+@layer utilities {
+  /* Put css classes in here that are only used once or twice */
+}
