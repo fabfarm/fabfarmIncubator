@@ -2,34 +2,36 @@
 // Written by: Lucio
 
 #include <Arduino.h>
+#include <FS.h>
+#include <SPIFFS.h>
+#include <WiFiManager.h>
 #include <Wire.h>
 #include <Adafruit_BME280.h>
-#include <WiFiManager.h>
 #include <math.h>
 #include <ESP32Servo.h>
 #include <TFT_eSPI.h>
 #include <SPI.h>
-#include <FS.h>
-#include <SPIFFS.h>
 #include <ESPAsyncWebServer.h>
 #include "NotoSansBold15.h"
+#include <AsyncElegantOTA.h>// For over-the-air updates
 
-bool      debugMode           = true;
-int       currentHumidity     = 0;
-float     currentPressure     = 0.0;
-float     currentTemperature  = 0.0;
-float     targetTemperature   = 0.0;
-int       targetHumidity      = 0;
-float     trayServoTurnInterval   = 0;
-float     trayServoTurnAngle      = 0;
+
+bool      debugMode             = true;
+int       currentHumidity       = 0;
+float     currentPressure       = 0.0;
+float     currentTemperature    = 0.0;
+float     targetTemperature     = 0.0;
+int       targetHumidity        = 0;
+float     trayServoTurnInterval = 0;
+float     trayServoTurnAngle    = 0;
 
 // Temperature in Celsius
-float     minTemperature      = 0.0;    
-float     maxTemperature      = 100.0;
-float     minHumidity         = 0.0;
-float     maxHumidity         = 100.0;
+float     minTemperature        = 0.0;    
+float     maxTemperature        = 100.0;
+float     minHumidity           = 0.0;
+float     maxHumidity           = 100.0;
 
-const int mosfetPin     = 16;
+const int mosfetPin             = 16;
 const int humidityVentServoPin  = 37;
 const int trayServoPin          = 38;
 
@@ -46,19 +48,25 @@ TwoWire           I2CBME        = TwoWire(0);
 
 #define       ON                  HIGH
 #define       OFF                 LOW 
-// Define colors
+
 #define       BLACK            0x0000
 #define       WHITE            0xFFFF
 #define       RED              0xF800
+
 #define       notoFont            NotoSansBold15
-#define       HYSTERESIS       0.5 // degrees Celsius
+#define       hysteresis       0.2 // degrees Celsius
+
+// select which pin will trigger the configuration portal when set to LOW
+#define TRIGGER_PIN 0
+int timeout = 120;
+
 
 AsyncWebServer  server(80);
 Servo           ventServo;
 Servo           trayServo;
-TFT_eSPI        tft           = TFT_eSPI();
-int16_t         displayHeight = 128;
-int16_t         displayWidth  = 160;
+TFT_eSPI        tft              = TFT_eSPI();
+int16_t         displayHeight    = 128;
+int16_t         displayWidth     = 160;
 
 void    initializeStorage();
 void    controlHeatElementMosfet(float currentTemperature, float targetTemperature);
@@ -88,8 +96,10 @@ void    wifiManagerSetup();
 void    loadSettings();
 
 void setup() {
-  Serial.begin(115200);
+  WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP
   wifiManagerSetup();
+  AsyncElegantOTA.begin(&server);
+  Serial.begin(115200);
   initializeTFTDisplay();
   initializeStorage();
   loadSettings();
@@ -101,6 +111,19 @@ void setup() {
 }
 
 void loop() {
+  if ( digitalRead(TRIGGER_PIN) == LOW) {
+    WiFiManager wm;   
+    wm.setConfigPortalTimeout(timeout);
+    if (!wm.startConfigPortal("OnDemandAP")) {
+      debugMessage("Failed to connect and hit timeout");
+      delay(3000);
+      //reset and try again, or maybe put it to deep sleep
+      ESP.restart();
+      delay(5000);
+    }
+    //if you get here you have connected to the WiFi
+    debugMessage("Connected to WiFi");
+  }
   bool isIncubatorActive = getIncubatorStatus();
   debugMessage("Incubator is: " + String(isIncubatorActive ? "active" : "not active"));
   runIncubator();
@@ -114,12 +137,16 @@ void loadSettings() {
 }
 
 void wifiManagerSetup() {
-WiFiManager wm;
-if (!wm.autoConnect("AutoConnectAP")) {
-debugMessage("Failed to connect");
-ESP.restart();
-}
-debugMessage("Connected to WiFi");
+  WiFiManager wm;
+  // reset settings - wipe stored credentials for testing
+  // these are stored by the esp library
+  // wm.resetSettings();
+  if (!wm.autoConnect("AutoConnectAP")) {
+    debugMessage("Failed to connect");
+    ESP.restart();
+  }
+  pinMode(TRIGGER_PIN, INPUT_PULLUP);
+  debugMessage("Connected to WiFi");
 }
 
 void writeToFile(const char *fileName, const String &content, bool append) {
@@ -338,9 +365,9 @@ void initializeWebServer() {
 }
 
 void controlHeatElementMosfet(float currentTemperature, float targetTemperature) {
-  if (currentTemperature < targetTemperature - HYSTERESIS) {
+  if (currentTemperature < targetTemperature - hysteresis) {
     digitalWrite(mosfetPin, ON);
-  } else if (currentTemperature > targetTemperature + HYSTERESIS) {
+  } else if (currentTemperature > targetTemperature + hysteresis) {
     digitalWrite(mosfetPin, OFF);
   }
 }
