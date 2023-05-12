@@ -12,7 +12,6 @@
 #include <FS.h>
 #include <SPIFFS.h>
 #include <ESPAsyncWebServer.h>
-#include <PID_v1.h>
 #include "NotoSansBold15.h"
 
 bool      debugMode           = true;
@@ -21,8 +20,8 @@ float     currentPressure     = 0.0;
 float     currentTemperature  = 0.0;
 float     targetTemperature   = 0.0;
 int       targetHumidity      = 0;
-float     servoTurnInterval   = 0;
-float     servoTurnAngle      = 0;
+float     trayServoTurnInterval   = 0;
+float     trayServoTurnAngle      = 0;
 
 // Temperature in Celsius
 float     minTemperature      = 0.0;    
@@ -30,7 +29,7 @@ float     maxTemperature      = 100.0;
 float     minHumidity         = 0.0;
 float     maxHumidity         = 100.0;
 
-const int temperatureRelayPin   = 16;
+const int mosfetPin     = 16;
 const int humidityVentServoPin  = 37;
 const int trayServoPin          = 38;
 
@@ -40,22 +39,19 @@ const int BMESclPin             = 34;   //Board SCL to sensor SCK
 const int servoOpenPosition     = 0;
 const int servoClosedPosition   = 200;
 
-double    tempSetpoint, tempInput,  tempOutput;
-double    humSetpoint,  humInput,   humOutput;
-double    tempKp, tempKi, tempKd;
-double    humKp, humKi, humKd;
-
-
-PID tempPID(&tempInput, &tempOutput,  &tempSetpoint,  tempKp, tempKi, tempKd, DIRECT);
-PID humPID(&humInput,   &humOutput,   &humSetpoint,   humKp,  humKi,  humKd,  DIRECT);
-
 #define           BME_SDA     	BMESdaPin
 #define           BME_SCL       BMESclPin
 Adafruit_BME280   bme;
-TwoWire           I2CBME      = TwoWire(0);
+TwoWire           I2CBME        = TwoWire(0);
 
-#define       relayOn           LOW
-#define       relayOff          HIGH 
+#define       ON                  HIGH
+#define       OFF                 LOW 
+// Define colors
+#define       BLACK            0x0000
+#define       WHITE            0xFFFF
+#define       RED              0xF800
+#define       notoFont            NotoSansBold15
+#define       HYSTERESIS       0.5 // degrees Celsius
 
 AsyncWebServer  server(80);
 Servo           ventServo;
@@ -64,16 +60,8 @@ TFT_eSPI        tft           = TFT_eSPI();
 int16_t         displayHeight = 128;
 int16_t         displayWidth  = 160;
 
-// Define colors
-#define       BLACK            0x0000
-#define       WHITE            0xFFFF
-#define       RED              0xF800
-
-#define       notoFont            NotoSansBold15
-
-
 void    initializeStorage();
-void    controlTemperatureRelay(float currentTemperature, float targetTemperature);
+void    controlHeatElementMosfet(float currentTemperature, float targetTemperature);
 void    controlHumidityVentServo(int currentHumidity, int targetHumidity);
 bool    getIncubatorStatus();
 void    initializeWebServer();
@@ -84,7 +72,6 @@ void    displayError(const String &errorMessage, const String &errorCode = "");
 void    runIncubator();
 void    initializeSensors();
 void    displayLineOnTFT(uint16_t x, uint16_t y, const char* label, float value, const char* unit);
-void    setupPIDControllers();
 void    controlTrayServo();
 String  readFromFile(const char *fileName);
 void    writeToFile(const char *fileName, const String &content, bool append = false);
@@ -93,12 +80,10 @@ void    handleTemperatureHumiditySettingsUpdate(AsyncWebServerRequest *request);
 void    handleIncubatorStatusToggle(AsyncWebServerRequest *request);
 void    handleDataFetchRequest(AsyncWebServerRequest *request);
 void    handleSensorDataRequest(AsyncWebServerRequest *request);
-void    handlePIDSettingsUpdate(AsyncWebServerRequest *request);
 void    handleCurrentSettingsRequest(AsyncWebServerRequest *request);
 void    debugMessage(String message);
 void    handleServoSettingsUpdate(AsyncWebServerRequest *request);
 void    handleCurrentServoSettingsRequest(AsyncWebServerRequest *request);
-void    handleCurrentPIDSettingsRequest(AsyncWebServerRequest *request);
 void    wifiManagerSetup();
 void    loadSettings();
 
@@ -111,8 +96,8 @@ void setup() {
   initializeWebServer();
   connectServos();
   initializeSensors();
-  setupPIDControllers();
   debugMessage("Setup complete");
+  pinMode(mosfetPin, OUTPUT);
 }
 
 void loop() {
@@ -122,16 +107,10 @@ void loop() {
 }
 
 void loadSettings() {
-  tempKp = readFromFile("/tempKp.txt").toDouble();
-  tempKi = readFromFile("/tempKi.txt").toDouble();
-  tempKd = readFromFile("/tempKd.txt").toDouble();
-  humKp = readFromFile("/humKp.txt").toDouble();
-  humKi = readFromFile("/humKi.txt").toDouble();
-  humKd = readFromFile("/humKd.txt").toDouble();
   targetTemperature = readFromFile("/set_temp.txt").toFloat();
   targetHumidity = readFromFile("/set_hum.txt").toInt();
-  servoTurnAngle = readFromFile("/servoTurnAngle.txt").toFloat();
-  servoTurnInterval = readFromFile("/interval.txt").toFloat();
+  trayServoTurnAngle = readFromFile("/trayServoTurnAngle.txt").toFloat();
+  trayServoTurnInterval = readFromFile("/interval.txt").toFloat();
 }
 
 void wifiManagerSetup() {
@@ -179,13 +158,6 @@ bool getIncubatorStatus() {
   return readFromFile("/set_status.txt").toInt() == 1;
 }
 
-void setupPIDControllers() {
-  tempPID.SetMode(AUTOMATIC);
-  tempPID.SetOutputLimits(0, 1);
-  humPID.SetMode(AUTOMATIC);
-  humPID.SetOutputLimits(0, 180);
-}
-
 void errorWithCode(String errorCode) {
   tft.fillScreen(BLACK);
   tft.setCursor(0, 0);
@@ -204,64 +176,58 @@ void initializeSensors() {
 
 void controlTrayServo() {
   static unsigned long lastTurnTime = 0;
-  static bool servoDirection = true;
+  static bool trayServoDirection = true;
 
-  int servoTurnInterval, servoTurnAngle;
-  servoTurnInterval = readFromFile("/interval.txt").toFloat();
-  servoTurnAngle = readFromFile("/servoTurnAngle.txt").toFloat();
+  int trayServoTurnInterval, trayServoTurnAngle;
+  trayServoTurnInterval = readFromFile("/interval.txt").toFloat();
+  trayServoTurnAngle = readFromFile("/trayServoTurnAngle.txt").toFloat();
 
-  if (millis() - lastTurnTime >= servoTurnInterval) {
+  if (millis() - lastTurnTime >= trayServoTurnInterval) {
     int currentServoPosition = trayServo.read();
-    int newPosition;
+    int trayServoNewPosition;
 
-    if (servoDirection) {
-      newPosition = currentServoPosition + servoTurnAngle;
+    if (trayServoDirection) {
+      trayServoNewPosition = currentServoPosition + trayServoTurnAngle;
     } else {
-      newPosition = currentServoPosition - servoTurnAngle;
+      trayServoNewPosition = currentServoPosition - trayServoTurnAngle;
     }
-
-    trayServo.write(newPosition);
+    trayServo.write(trayServoNewPosition);
     lastTurnTime = millis();
-    servoDirection = !servoDirection; // Toggle direction
-  debugMessage("Servo moved to position: " + String(newPosition) + (servoDirection ? " (forward)" : " (backward)"));
+    trayServoDirection = !trayServoDirection; // Toggle direction
+  debugMessage("Servo moved to position: " + String(trayServoNewPosition) + (trayServoDirection ? " (forward)" : " (backward)"));
   }
 }
 
 void runIncubator() {
-  bool        isIncubatorActive   = getIncubatorStatus();
+  bool isIncubatorActive  = getIncubatorStatus();
   if (!isIncubatorActive) {
     tft.fillScreen(BLACK);
     tft.setCursor(0, 0);
     tft.print("SYSTEM PAUSED");
-    digitalWrite(temperatureRelayPin, relayOff);
-    ventServo.write(200);
+    digitalWrite(mosfetPin, OFF);
+    ventServo.write(servoClosedPosition);
     return;
   }
-
-  currentTemperature    = bme.readTemperature();
-  currentHumidity       = bme.readHumidity();
-  currentPressure        = bme.readPressure() / 100.0F;
-
+  currentTemperature      = bme.readTemperature();
+  currentHumidity         = bme.readHumidity();
+  currentPressure         = bme.readPressure() / 100.0F;
   if (isnan(currentHumidity) || isnan(currentTemperature)) {
     debugMessage("Failed to read from sensor!");
     return;
   }
-
   if (currentTemperature < minTemperature || currentTemperature > maxTemperature || currentHumidity < minHumidity || currentHumidity > maxHumidity) {
     debugMessage("Sensor values out of range!");
     return;
   }
-
   writeToFile("/data.txt", String(currentTemperature) + "," + String(currentHumidity) + "   ", true);
-  debugMessage("Data saved to SPIFFS");
-  controlTemperatureRelay(currentTemperature, targetTemperature);
+  // debugMessage("Data saved to SPIFFS");
+  controlHeatElementMosfet(currentTemperature, targetTemperature);
   controlHumidityVentServo(currentHumidity, targetHumidity);
   controlTrayServo();
   updateTFTDisplay();
 }
 
 void displayLineOnTFT(uint16_t x, uint16_t y, const char* label, float value, const char* unit) {
-  //tft.fillScreen(BLACK);
   tft.setCursor(x, y);
   tft.print(label);
   tft.printf("%.1f", value);
@@ -270,60 +236,55 @@ void displayLineOnTFT(uint16_t x, uint16_t y, const char* label, float value, co
 
 void updateTFTDisplay() {
   if (targetTemperature != -500 || targetHumidity != -500) {
-    tft.fillScreen(BLACK);
-    displayLineOnTFT(0, 0,    "T: ",    currentTemperature, "C");
-    displayLineOnTFT(0, 20,   "H: ",    currentHumidity,    "%");
-    displayLineOnTFT(0, 40,   "P: ",    currentPressure,     "hPa");
-    displayLineOnTFT(0, 70,   "setT:",  targetTemperature,  "C");
-    displayLineOnTFT(0, 90,   "setH:",  targetHumidity,     "%");
+    static float lastTemperature = -501.0, lastHumidity = -501.0, lastPressure = -501.0;
+
+    if (currentTemperature != lastTemperature) {
+      tft.fillRect(0, 0, tft.width(), 20, BLACK); // Clear the entire line
+      displayLineOnTFT(0, 0, "T: ", currentTemperature, "C");
+      lastTemperature = currentTemperature;
+    }
+
+    if (currentHumidity != lastHumidity) {
+      tft.fillRect(0, 20, tft.width(), 20, BLACK); // Clear the entire line
+      displayLineOnTFT(0, 20, "H: ", currentHumidity, "%");
+      lastHumidity = currentHumidity;
+    }
+
+    if (currentPressure != lastPressure) {
+      tft.fillRect(0, 40, tft.width(), 20, BLACK); // Clear the entire line
+      displayLineOnTFT(0, 40, "P: ", currentPressure, "hPa");
+      lastPressure = currentPressure;
+    }
+
+    tft.fillRect(0, 70, tft.width(), 20, BLACK); // Clear the entire line
+    displayLineOnTFT(0, 70, "setT:", targetTemperature, "C");
+
+    tft.fillRect(0, 90, tft.width(), 20, BLACK); // Clear the entire line
+    displayLineOnTFT(0, 90, "setH:", targetHumidity, "%");
   }
 }
 
+
 void connectServos() {
-  pinMode(temperatureRelayPin, OUTPUT);
   ventServo.attach(humidityVentServoPin);
-  ventServo.write(200);
   trayServo.attach(trayServoPin);
-  trayServo.write(200);
   }
 
 void handleServoSettingsUpdate(AsyncWebServerRequest *request) {
-  String servoTurnAngle      = request->getParam("angle")->value();
-  String servoTurnInterval   = request->getParam("interval")->value();
-  debugMessage("Received updateServoSettings request with angle: " + servoTurnAngle + " and interval: " + servoTurnInterval);
-  writeToFile("/servoTurnAngle.txt", servoTurnAngle, false);
-  writeToFile("/interval.txt", servoTurnInterval, false);
+  String trayServoTurnAngle      = request->getParam("angle")->value();
+  String trayServoTurnInterval   = request->getParam("interval")->value();
+  debugMessage("Received updateServoSettings request with angle: " + trayServoTurnAngle + " and interval: " + trayServoTurnInterval);
+  writeToFile("/trayServoTurnAngle.txt", trayServoTurnAngle, false);
+  writeToFile("/interval.txt", trayServoTurnInterval, false);
   request->send(200, "text/plain", "OK");
 }
-
 void handleCurrentSettingsRequest(AsyncWebServerRequest *request) {
   String json = "{\"temp\":" + String(targetTemperature) + ",\"hum\":" + String(targetHumidity) + "}";
   request->send(200, "application/json", json);
 }
 void handleCurrentServoSettingsRequest(AsyncWebServerRequest *request) {
-  String json = "{\"angle\":" + String(servoTurnAngle) + ",\"interval\":" + String(servoTurnInterval) + "}";	
+  String json = "{\"angle\":" + String(trayServoTurnAngle) + ",\"interval\":" + String(trayServoTurnInterval) + "}";	
   request->send(200, "application/json", json);
-}
-void handleCurrentPIDSettingsRequest(AsyncWebServerRequest *request) {
-  String json = "{\"tempKp\":" + String(tempKp) + ",\"tempKi\":" + String(tempKi) + ",\"tempKd\":" + String(tempKd) + ",\"humKp\":" + String(humKp) + ",\"humKi\":" + String(humKi) + ",\"humKd\":" + String(humKd) + "}";
-  request->send(200, "application/json", json);
-}
-
-void handlePIDSettingsUpdate(AsyncWebServerRequest *request) {
-  String tempKp     = request->getParam("tempKp")->value();
-  String tempKi     = request->getParam("tempKi")->value();
-  String tempKd     = request->getParam("tempKd")->value();
-  String humKp      = request->getParam("humKp")->value();
-  String humKi      = request->getParam("humKi")->value();
-  String humKd      = request->getParam("humKd")->value();
-  debugMessage("Received updatePIDSettings request with tempKp: " + tempKp + " tempKi: " + tempKi + " tempKd: " + tempKd + " humKp: " + humKp + " humKi: " + humKi + " humKd: " + humKd);
-  writeToFile("/tempKp.txt", tempKp, false);
-  writeToFile("/tempKi.txt", tempKi, false);
-  writeToFile("/tempKd.txt", tempKd, false);
-  writeToFile("/humKp.txt", humKp, false);
-  writeToFile("/humKi.txt", humKi, false);
-  writeToFile("/humKd.txt", humKd, false);
-  request->send(200, "text/plain", "OK");
 }
 
 void handleRootRequest(AsyncWebServerRequest *request) {
@@ -335,12 +296,9 @@ void handleTemperatureHumiditySettingsUpdate(AsyncWebServerRequest *request) {
   String hum = request->getParam("hum")->value();
   targetTemperature = temp.toFloat();
   targetHumidity = hum.toInt();
-
   debugMessage("Received updateSettings request with temp: " + temp + " and hum: " + hum);
-
   writeToFile("/set_temp.txt", String(targetTemperature), false);
   writeToFile("/set_hum.txt", String(targetHumidity), false);
-
   request->send(200, "text/plain", "OK");
 }
 
@@ -363,7 +321,6 @@ void handleDataFetchRequest(AsyncWebServerRequest *request) {
 void handleSensorDataRequest(AsyncWebServerRequest *request) {
   float temperature = bme.readTemperature();
   float humidity = bme.readHumidity();
-
   String jsonResponse = "{ \"temperature\": " + String(temperature) + ", \"humidity\": " + String(humidity) + " }";
   request->send(200, "application/json", jsonResponse);
 }
@@ -375,32 +332,32 @@ void initializeWebServer() {
   server.on("/fetchData", HTTP_GET, handleDataFetchRequest);
   server.on("/getSensorData", HTTP_GET, handleSensorDataRequest);
   server.on("/updateServoSettings", HTTP_GET, handleServoSettingsUpdate);
-  server.on("/updatePIDSettings", HTTP_GET, handlePIDSettingsUpdate);
   server.on("/getCurrentSettings", HTTP_GET, handleCurrentSettingsRequest);
   server.on("/getCurrentServoSettings", HTTP_GET, handleCurrentServoSettingsRequest);
-  server.on("/getCurrentPIDSettings", HTTP_GET, handleCurrentPIDSettingsRequest);
-
   server.begin();
 }
-void controlTemperatureRelay(float currentTemperature, float targetTemperature) {
-  tempInput = currentTemperature;
-  tempSetpoint = targetTemperature;
-  tempPID.Compute();
 
-  if (tempOutput > 0.5) {
-    digitalWrite(temperatureRelayPin, relayOn);
-  } else {
-    digitalWrite(temperatureRelayPin, relayOff);
+void controlHeatElementMosfet(float currentTemperature, float targetTemperature) {
+  if (currentTemperature < targetTemperature - HYSTERESIS) {
+    digitalWrite(mosfetPin, ON);
+  } else if (currentTemperature > targetTemperature + HYSTERESIS) {
+    digitalWrite(mosfetPin, OFF);
   }
 }
 
 void controlHumidityVentServo(int currentHumidity, int targetHumidity) {
-  humInput = currentHumidity;
-  humSetpoint = targetHumidity;
-  humPID.Compute();
-  int servoPosition = servoClosedPosition - humOutput;
-  ventServo.write(servoPosition);
+  int humidityError = targetHumidity - currentHumidity;
+  if (humidityError > 5) {
+    // If the humidity is more than 5% less than the target, open the vent
+    ventServo.write(servoOpenPosition);
+  } else if (humidityError < -5) {
+    // If the humidity is more than 5% greater than the target, close the vent
+    ventServo.write(servoClosedPosition);
+  } else {
+    // If the humidity is within 5% of the target, do nothing
+  }
 }
+
 
 void initializeStorage() {
   if (!SPIFFS.begin(true)) {
@@ -408,7 +365,6 @@ void initializeStorage() {
     displayError("Error mounting SPIFFS");
     return;
   }
-  tft.fillScreen(TFT_BLACK);
   tft.setCursor(0, 0);
   tft.setTextColor(TFT_WHITE);
   tft.setTextSize(2);
@@ -432,4 +388,4 @@ void debugMessage(String message) {
     Serial.println(message);
   }
 }
-//last time I checked we had 410 lines of code now 430
+//last time I checked we had 430 lines of code now 387
