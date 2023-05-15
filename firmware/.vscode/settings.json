@@ -3,5 +3,6 @@
     "idf.openOcdConfigs": [
         "board/esp32s3-bridge.cfg"
     ],
-    "idf.portWin": "COM4"
+    "idf.portWin": "COM4",
+    "codeium.enableSearch": true
 }
