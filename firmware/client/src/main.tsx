@@ -1,5 +1,11 @@
-import { render } from 'preact'
-import { App } from './app.tsx'
-import './index.css'
+import { render } from "preact";
+import { App } from "./app.tsx";
 
-render(<App />, document.getElementById('app') as HTMLElement)
+import { ThemeProvider } from "@material-tailwind/react";
+
+render(
+  <ThemeProvider>
+    <App />
+  </ThemeProvider>,
+  document.getElementById("app") as HTMLElement
+);
