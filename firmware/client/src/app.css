@@ -4,6 +4,13 @@
 
 @layer base {
   /* Put css classes in here that style native HTML elements */
+  body {
+    @apply bg-black text-white;
+  }
+
+  header {
+    @apply text-4xl font-sans font-bold p-8;
+  }
 }
 
 @layer components {
