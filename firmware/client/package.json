@@ -9,7 +9,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "preact": "^10.13.1"
+    "@heroicons/react": "^2.0.18",
+    "@material-tailwind/react": "^2.0.0",
+    "clsx": "^1.2.1",
+    "feather-icons": "^4.29.0",
+    "preact": "^10.13.1",
+    "react-apexcharts": "^1.4.0"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.5.0",
