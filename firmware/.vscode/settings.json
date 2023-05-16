@@ -4,5 +4,6 @@
         "board/esp32s3-bridge.cfg"
     ],
     "idf.portWin": "COM4",
-    "codeium.enableSearch": true
+    "idf.portLinux": "/dev/ttyUSB0",
+    "idf.portMac": "/dev/cu.SLAB_USBtoUART",
 }

@@ -4,6 +4,10 @@
 #include <SPI.h>
 #include "config.h"
 
+constexpr int16_t defaultXPos = 0;
+constexpr int16_t lineHeight = 20;
+constexpr float invalidValue = -500.0;
+
 void displayLineOnTFT(uint16_t x, uint16_t y, const char* label, float value, const char* unit) {
     tft.setCursor(x, y);
     tft.print(label);
@@ -41,32 +45,30 @@ void displayError(const String &errorMessage, const String &errorCode) {
     }
 }
 
-void updateTFTDisplay() {
-    if (targetTemperature != -500 || targetHumidity != -500) {
-        static float lastTemperature = -501.0, lastHumidity = -501.0, lastPressure = -501.0;
-
-        if (currentTemperature != lastTemperature) {
-            tft.fillRect(0, 0, tft.width(), 20, BLACK); // Clear the entire line
-            displayLineOnTFT(0, 0, "T: ", currentTemperature, "C");
-            lastTemperature = currentTemperature;
-        }
-
-        if (currentHumidity != lastHumidity) {
-            tft.fillRect(0, 20, tft.width(), 20, BLACK); // Clear the entire line
-            displayLineOnTFT(0, 20, "H: ", currentHumidity, "%");
-            lastHumidity = currentHumidity;
-        }
-
-        if (currentPressure != lastPressure) {
-            tft.fillRect(0, 40, tft.width(), 20, BLACK); // Clear the entire line
-            displayLineOnTFT(0, 40, "P: ", currentPressure, "hPa");
-            lastPressure = currentPressure;
-        }
-
-        tft.fillRect(0, 70, tft.width(), 20, BLACK); // Clear the entire line
-        displayLineOnTFT(0, 70, "setT:", targetTemperature, "C");
-
-        tft.fillRect(0, 90, tft.width(), 20, BLACK); // Clear the entire line
-        displayLineOnTFT(0, 90, "setH:", targetHumidity, "%");
+void updateLineIfChanged(uint16_t y, const char* label, float &lastValue, float currentValue, const char* unit) {
+    if (currentValue != lastValue) {
+        tft.fillRect(defaultXPos, y, tft.width(), lineHeight, BLACK); // Clear the entire line
+        displayLineOnTFT(defaultXPos, y, label, currentValue, unit);
+        lastValue = currentValue;
     }
 }
+
+void displayTargetValue(uint16_t y, const char* label, float value, const char* unit) {
+    tft.fillRect(defaultXPos, y, tft.width(), lineHeight, BLACK); // Clear the entire line
+    displayLineOnTFT(defaultXPos, y, label, value, unit);
+}
+
+void updateTFTDisplay() {
+    if (targetTemperature != invalidValue || targetHumidity != invalidValue) {
+        static float lastTemperature = invalidValue + 1.0, lastHumidity = invalidValue + 1.0, lastPressure = invalidValue + 1.0;
+
+        updateLineIfChanged(0, "T: ", lastTemperature, currentTemperature, "C");
+        updateLineIfChanged(lineHeight, "H: ", lastHumidity, currentHumidity, "%");
+        updateLineIfChanged(lineHeight * 2, "P: ", lastPressure, currentPressure, "hPa");
+
+        // Always display target values (assuming they can be changed)
+        displayTargetValue(lineHeight * 3.5, "setT:", targetTemperature, "C");
+        displayTargetValue(lineHeight * 4.5, "setH:", targetHumidity, "%");
+    }
+}
+

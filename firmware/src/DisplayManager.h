@@ -16,4 +16,8 @@ void    displayError(const String &errorMessage, const String &errorCode = "");
 
 void    updateTFTDisplay();
 
+void    updateLineIfChanged(uint16_t y, const char* label, float &lastValue, float currentValue, const char* unit);
+
+void    displayTargetValue(uint16_t y, const char* label, float value, const char* unit);
+
 #endif
