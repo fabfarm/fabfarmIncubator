@@ -1,83 +1,37 @@
 import React from "preact/compat";
 import "./app.css";
-import SideNavDrawer from "./components/SideNavDrawer";
 import StatisticsCard from "./components/StatisticsCard";
 import StatisticsChart from "./components/StatisticsChart";
-import chartsConfig from "./configs/chart-config";
 import DropletIcon from "./components/icons/DropletIcon";
 import TemperatureIcon from "./components/icons/TemperatureIcon";
-
-const dailyHumidityChart = {
-  type: "line",
-  height: 220,
-  series: [
-    {
-      name: "Humidity",
-      data: [50, 40, 300, 320, 500, 350, 200, 230, 500],
-    },
-  ],
-  options: {
-    ...chartsConfig,
-    colors: ["#fff"],
-    stroke: {
-      lineCap: "round",
-    },
-    markers: {
-      size: 5,
-    },
-    xaxis: {
-      ...chartsConfig.xaxis,
-      categories: [
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-      ],
-    },
-  },
-};
-
-const dailyTemperatureChart = {
-  type: "line",
-  height: 220,
-  series: [
-    {
-      name: "Temperature",
-      data: [50, 40, 300, 320, 500, 350, 200, 230, 500],
-    },
-  ],
-  options: {
-    ...chartsConfig,
-    colors: ["#fff"],
-    stroke: {
-      lineCap: "round",
-    },
-    markers: {
-      size: 5,
-    },
-    xaxis: {
-      ...chartsConfig.xaxis,
-      categories: [
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-      ],
-    },
-  },
-};
+import dailyHumidityChart from "./configs/humidity-config";
+import dailyTemperatureChart from "./configs/temperature-config";
+import { useQuery } from "react-query";
+import { Spinner } from "@material-tailwind/react";
 
 export function App() {
+  const {
+    isLoading,
+    error,
+    data,
+  }: { isLoading: boolean; error: any; data: any } = useQuery({
+    queryKey: ["fetchData"],
+    queryFn: () =>
+      fetch([import.meta.env.VITE_SERVED_IP, "fetchData"].join("/"))
+        .then((res) => res.json())
+        .then((data) => console.log(data)),
+  });
+
+  if (isLoading) return <Spinner className="w-20 h-20 m-8"></Spinner>;
+
+  if (error)
+    return (
+      <>
+        {"An error has occurred, check that you are connecting to the correct IP: " +
+          error.message}
+      </>
+    );
+
   return (
     <>
       <header>🥚 Incubator</header>
@@ -113,9 +67,6 @@ export function App() {
             chart={dailyTemperatureChart}
             title="Daily Temperature"
           ></StatisticsChart>
-        </div>
-        <div className="absolute bottom-8 right-8">
-          <SideNavDrawer></SideNavDrawer>
         </div>
       </main>
     </>

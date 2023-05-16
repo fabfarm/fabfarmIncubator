@@ -1,4 +1,4 @@
-export const chartsConfig = {
+const chartsConfig = {
   chart: {
     toolbar: {
       show: false,
