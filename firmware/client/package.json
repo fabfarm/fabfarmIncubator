@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build --outDir src/data/clientDist --emptyOutDir",
-    "preview": "vite preview"
+    "preview": "vite preview --outDir src/data/clientDist"
   },
   "dependencies": {
     "@heroicons/react": "^2.0.18",
@@ -14,7 +14,8 @@
     "clsx": "^1.2.1",
     "feather-icons": "^4.29.0",
     "preact": "^10.13.1",
-    "react-apexcharts": "^1.4.0"
+    "react-apexcharts": "^1.4.0",
+    "react-query": "^3.39.3"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.5.0",
