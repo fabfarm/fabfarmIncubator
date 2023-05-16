@@ -96,7 +96,7 @@ void handleDebugModeToggle(AsyncWebServerRequest *request) {
     request->send(501, "application/json", "Not implemented yet.");
 }
 
-void getDebugModeRequest(AsyncWebServerRequest *request) {
+void handleDebugModeRequest(AsyncWebServerRequest *request) {
     // TODO: For Lucio ;)
     request->send(501, "application/json", "Not implemented yet.");
 }
