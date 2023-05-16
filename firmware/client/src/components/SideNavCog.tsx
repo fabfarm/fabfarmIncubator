@@ -12,7 +12,8 @@ type SideNavCogProps = {
 export default function SideNavCog({ handleSideNavCogClick }: SideNavCogProps) {
   return (
     <div className="relative w-full h-80" onClick={handleSideNavCogClick}>
-      <div className="absolute bottom-0 right-0">
+      <div className="fixed bottom-8 right-8">
+        {/* @ts-ignore */}
         <SpeedDial>
           <SpeedDialHandler>
             <IconButton size="lg" className="rounded-full">

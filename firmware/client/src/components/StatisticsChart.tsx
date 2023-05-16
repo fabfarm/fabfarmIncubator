@@ -25,6 +25,7 @@ export function StatisticsChart({
   return (
     <Card>
       <CardHeader variant="gradient" color={color}>
+        {/* @ts-ignore */}
         <Chart {...chart} />
       </CardHeader>
       <CardBody className="p-6">

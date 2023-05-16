@@ -2,11 +2,15 @@ import {
   Accordion,
   AccordionBody,
   AccordionHeader,
+  Button,
   Card,
+  Chip,
   IconButton,
+  Input,
   List,
   ListItem,
   ListItemPrefix,
+  Tooltip,
   Typography,
 } from "@material-tailwind/react";
 
@@ -19,15 +23,45 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { useState } from "preact/hooks";
+import SliderControl from "./Slider";
 import DropletIcon from "./icons/DropletIcon";
 import TemperatureIcon from "./icons/TemperatureIcon";
-import SliderControl from "./Slider";
+import React from "preact/compat";
+
+enum INCUBATION_OP_STATUS {
+  UNKNOWN = "Unknown",
+  ON = "On",
+  OFF = "Off",
+}
 
 export default function SideNav({ closeDrawer }: { closeDrawer: () => void }) {
-  const [open, setOpen] = useState(0);
+  const [open, setOpen] = useState<number>(0);
+  const [temperature, setTemp] = useState<number>(30.0);
+  const [relHumidity, setRelHumidity] = useState<number>(50.0);
+  const [servoTurnAngle, setServoTurnAngle] = useState<number>(45.0);
+  const [servoIntervalMs, setServoIntervalMs] = useState<number>(1000);
+  const [pidTemperatureKp, setPidTemperatureKp] = useState<number>();
+  const [pidTemperatureKi, setPidTemperatureKi] = useState<number>();
+  const [pidTemperatureKd, setPidTemperatureKd] = useState<number>();
+  const [pidRelHumidityKp, setPidRelHumidityKp] = useState<number>();
+  const [pidRelHumidityKi, setPidRelHumidityKi] = useState<number>();
+  const [pidRelHumidityKd, setPidRelHumidityKd] = useState<number>();
+  const [incubatorOperationStatus, _] = useState<INCUBATION_OP_STATUS>(
+    INCUBATION_OP_STATUS.UNKNOWN
+  );
+  const [isResetDataOpened, setIsResetDataOpened] = useState<boolean>(false);
 
   const handleOpen = (value: number) => {
     setOpen(open === value ? 0 : value);
+  };
+
+  const handleToggleResetDataOpened = () => {
+    setIsResetDataOpened(!isResetDataOpened);
+  };
+
+  const handleDataReset = () => {
+    // TODO: Implement data reset
+    handleToggleResetDataOpened();
   };
 
   return (
@@ -67,7 +101,11 @@ export default function SideNav({ closeDrawer }: { closeDrawer: () => void }) {
           </ListItem>
           <AccordionBody className="py-1">
             <List className="p-0 my-4">
-              <SliderControl></SliderControl>
+              <SliderControl
+                unit="°C"
+                value={temperature}
+                setValue={setTemp}
+              ></SliderControl>
             </List>
           </AccordionBody>
         </Accordion>
@@ -91,13 +129,17 @@ export default function SideNav({ closeDrawer }: { closeDrawer: () => void }) {
                 <DropletIcon className="h-5 w-5" />
               </ListItemPrefix>
               <Typography color="blue-gray" className="mr-auto font-normal">
-                Humidity
+                Relative Humidity
               </Typography>
             </AccordionHeader>
           </ListItem>
           <AccordionBody className="py-1">
             <List className="p-0 my-4">
-              <SliderControl></SliderControl>
+              <SliderControl
+                unit="%"
+                value={relHumidity}
+                setValue={setRelHumidity}
+              ></SliderControl>
             </List>
           </AccordionBody>
         </Accordion>
@@ -126,7 +168,26 @@ export default function SideNav({ closeDrawer }: { closeDrawer: () => void }) {
             </AccordionHeader>
           </ListItem>
           <AccordionBody className="py-1">
-            <List className="p-0"></List>
+            <List className="flex flex-col gap-8">
+              <SliderControl
+                min={0}
+                max={360}
+                label="Servo turn angle"
+                unit="°"
+                value={servoTurnAngle}
+                setValue={setServoTurnAngle}
+              ></SliderControl>
+              <Input
+                inputProps={{
+                  type: "number",
+                  value: servoIntervalMs,
+                  onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+                    setServoIntervalMs(parseInt(e.currentTarget.value)),
+                }}
+                label="Servo turn interval: (ms)"
+                variant="outlined"
+              />
+            </List>
           </AccordionBody>
         </Accordion>
 
@@ -155,7 +216,77 @@ export default function SideNav({ closeDrawer }: { closeDrawer: () => void }) {
             </AccordionHeader>
           </ListItem>
           <AccordionBody className="py-1">
-            <List className="p-0"></List>
+            <List className="p-0">
+              <Input
+                inputProps={{
+                  type: "number",
+                  step: 0.01,
+                  value: { pidTemperatureKp },
+                  onChange: (event: React.ChangeEvent<HTMLInputElement>) =>
+                    setPidTemperatureKp(Number(event.currentTarget.value)),
+                }}
+                label="Temperature Kp:"
+                variant="outlined"
+              />
+              <Input
+                inputProps={{
+                  type: "number",
+                  step: 0.01,
+                  value: { pidTemperatureKi },
+                  onChange: (event: React.ChangeEvent<HTMLInputElement>) =>
+                    setPidTemperatureKi(Number(event.currentTarget.value)),
+                }}
+                label="Temperature Ki:"
+                variant="outlined"
+              />
+              <Input
+                inputProps={{
+                  type: "number",
+                  step: 0.01,
+                  value: { pidTemperatureKd },
+                  onChange: (event: React.ChangeEvent<HTMLInputElement>) =>
+                    setPidTemperatureKd(Number(event.currentTarget.value)),
+                }}
+                label="Temperature Kd:"
+                variant="outlined"
+              />
+              <Input
+                inputProps={{
+                  type: "number",
+                  step: 0.01,
+                  value: { pidRelHumidityKp },
+                  onChange: (event: React.ChangeEvent<HTMLInputElement>) =>
+                    setPidRelHumidityKp(Number(event.currentTarget.value)),
+                }}
+                label="Rel. Humidity Kp:"
+                variant="outlined"
+              />
+              <Input
+                inputProps={{
+                  type: "number",
+                  step: 0.01,
+                  value: { pidRelHumidityKi },
+                  onChange: (event: React.ChangeEvent<HTMLInputElement>) =>
+                    setPidRelHumidityKi(Number(event.currentTarget.value)),
+                }}
+                label="Rel. Humidity Ki:"
+                variant="outlined"
+              />
+              <Input
+                inputProps={{
+                  type: "number",
+                  step: 0.01,
+                  value: { pidRelHumidityKd },
+                  onChange: (event: React.ChangeEvent<HTMLInputElement>) =>
+                    setPidRelHumidityKd(Number(event.currentTarget.value)),
+                }}
+                label="Rel. Humidity Kd:"
+                variant="outlined"
+              />
+              <Button disabled className="disabled:cursor-not-allowed">
+                Auto-tune PID Params
+              </Button>
+            </List>
           </AccordionBody>
         </Accordion>
 
@@ -184,7 +315,17 @@ export default function SideNav({ closeDrawer }: { closeDrawer: () => void }) {
             </AccordionHeader>
           </ListItem>
           <AccordionBody className="py-1">
-            <List className="p-0"></List>
+            <List className="flex">
+              <Button>Toggle Operation</Button>
+              <div className="flex gap-4">
+                <Typography className="font-semibold">Status:</Typography>
+                <Chip
+                  color="gray"
+                  value={incubatorOperationStatus}
+                  className="w-full"
+                />
+              </div>
+            </List>
           </AccordionBody>
         </Accordion>
 
@@ -213,7 +354,34 @@ export default function SideNav({ closeDrawer }: { closeDrawer: () => void }) {
             </AccordionHeader>
           </ListItem>
           <AccordionBody className="py-1">
-            <List className="p-0"></List>
+            <List className="flex flex-col gap-4">
+              <Button>Toggle Debug Mode</Button>
+              <div className="flex gap-4">
+                <Typography className="font-semibold">Status:</Typography>
+                <Chip color="gray" value="Unknown" className="w-full" />
+              </div>
+              <Button color="orange" onClick={handleToggleResetDataOpened}>
+                Reset Data
+              </Button>
+              {isResetDataOpened && (
+                <>
+                  <Typography className="text-center font-semibold">
+                    Are you sure?
+                  </Typography>
+                  <Tooltip
+                    position="top"
+                    className="z-[99999999999]"
+                    content="Use this when you want to start a
+                    fresh incubation.
+                    "
+                  >
+                    <Button color="red" onClick={handleDataReset}>
+                      Yes
+                    </Button>
+                  </Tooltip>
+                </>
+              )}
+            </List>
           </AccordionBody>
         </Accordion>
       </List>
