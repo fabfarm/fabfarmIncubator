@@ -5,3 +5,4 @@
 *.pro
 firmware/.vscode/*
 firmware/.vscode/settings.json
+firmware/client/*
