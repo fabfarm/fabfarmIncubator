@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build --outDir src/data/clientDist --emptyOutDir",
-    "preview": "vite preview --outDir src/data/clientDist"
+    "build": "tsc && vite build --outDir ../src/data",
+    "flash": "cd .. && sudo ./flash_script/unix_compile_firmware_spiffs_and_flash.sh",
+    "build-and-flash": "tsc && vite build --outDir ../src/data && cd .. && sudo ./flash_script/unix_compile_firmware_spiffs_and_flash.sh",
+    "preview": "vite preview --outDir src/data"
   },
   "dependencies": {
     "@heroicons/react": "^2.0.18",
@@ -23,6 +25,7 @@
     "postcss": "^8.4.23",
     "tailwindcss": "^3.3.2",
     "typescript": "^5.0.2",
-    "vite": "^4.3.2"
+    "vite": "^4.3.2",
+    "vite-plugin-compression": "^0.5.1"
   }
 }
