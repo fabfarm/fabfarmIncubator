@@ -4,3 +4,4 @@
 *.job
 *.pro
 *.l#1
+firmware/client/*
