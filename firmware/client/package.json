@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build --outDir ../src/data",
+    "build": "rm -f ../src/data/assets/*.gz && tsc && vite build --outDir ../src/data",
     "flash": "cd .. && sudo ./flash_script/unix_compile_firmware_spiffs_and_flash.sh",
-    "build-and-flash": "tsc && vite build --outDir ../src/data && cd .. && sudo ./flash_script/unix_compile_firmware_spiffs_and_flash.sh",
+    "build-and-flash": "rm -f ../src/data/assets/*.gz && tsc && vite build --outDir ../src/data && cd .. && sudo ./flash_script/unix_compile_firmware_spiffs_and_flash.sh",
     "preview": "vite preview --outDir src/data"
   },
   "dependencies": {
