@@ -11,6 +11,8 @@
 #include "DebugManager.h"
 #include "runIncubator.h"
 #include "WifiManagerHelper.h"
+#include "pidManager.h"
+
 
 
 void setup() {
@@ -24,6 +26,7 @@ void setup() {
   initializeWebServer();
   connectServos();
   initializeSensors();
+  setupPidControllers();
   debugMessage("Setup complete");
   pinMode(mosfetPin, OUTPUT);
 }
@@ -32,5 +35,3 @@ void loop() {
   wifiManagerTrigerPinSetup();
   runIncubator();
 }
-
-//last time I checked we had 430 lines of code now 387

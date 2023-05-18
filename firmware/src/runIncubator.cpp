@@ -38,22 +38,23 @@ void runIncubator() {
 }
 
 void controlHeatElementMosfet(float currentTemperature, float targetTemperature) {
-  if (currentTemperature < targetTemperature - hysteresis) {
-    digitalWrite(mosfetPin, ON);
-  } else if (currentTemperature > targetTemperature + hysteresis) {
-    digitalWrite(mosfetPin, OFF);
-  }
+    tempInput = currentTemperature; // Set the current temperature
+    tempSetpoint = targetTemperature; // Set the target temperature
+    tempPID.Compute(); // Compute the new output
+    // If the output is greater than 0.5, turn the heating element on
+    // Otherwise, turn it off
+    if (tempOutput > 0.5) {
+        digitalWrite(mosfetPin, ON);
+    } else {
+        digitalWrite(mosfetPin, OFF);
+    }
 }
 
 void controlHumidityVentServo(int currentHumidity, int targetHumidity) {
-    int humidityError = targetHumidity - currentHumidity;
-    if (humidityError > 5) {
-        // If the humidity is more than 5% less than the target, open the vent
-        ventServo.write(servoOpenPosition);
-    } else if (humidityError < -5) {
-        // If the humidity is more than 5% greater than the target, close the vent
-        ventServo.write(servoClosedPosition);
-    } else {
-        // If the humidity is within 5% of the target, do nothing
-    }
+
+    humInput = currentHumidity;
+    humSetpoint = targetHumidity;
+    humPID.Compute();
+    int servoPosition = servoClosedPosition - humOutput;
+    ventServo.write(servoPosition);
 }

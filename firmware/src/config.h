@@ -9,6 +9,7 @@
 #include <Adafruit_BME280.h>
 #include <math.h>
 #include <ESP32Servo.h>
+#include <PID_v1.h>
 #include <TFT_eSPI.h>
 #include <SPI.h>
 #include <ESPAsyncWebServer.h>
@@ -65,5 +66,14 @@ extern Servo           trayServo;
 extern TFT_eSPI        tft;
 extern int16_t         displayHeight;
 extern int16_t         displayWidth;
+
+extern double    tempSetpoint, tempInput,  tempOutput;
+extern double    humSetpoint,  humInput,   humOutput;
+extern double    tempKp, tempKi, tempKd;
+extern double    humKp, humKi, humKd;
+
+extern PID tempPID;
+extern PID humPID;
+
 
 #endif

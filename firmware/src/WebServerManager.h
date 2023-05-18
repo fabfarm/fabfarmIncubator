@@ -19,5 +19,7 @@ void    handleSensorDataRequest(AsyncWebServerRequest *request);
 void    handleCurrentSettingsRequest(AsyncWebServerRequest *request);
 void    handleServoSettingsUpdate(AsyncWebServerRequest *request);
 void    handleCurrentServoSettingsRequest(AsyncWebServerRequest *request);
+void    handleCurrentPIDSettingsRequest(AsyncWebServerRequest *request);
+void    handlePIDSettingsUpdate(AsyncWebServerRequest *request);
 
 #endif

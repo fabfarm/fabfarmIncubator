@@ -5,6 +5,27 @@
 #include "SensorManager.h"
 #include "DebugManager.h"
 
+void handleCurrentPIDSettingsRequest(AsyncWebServerRequest *request) {
+    String json = "{\"tempKp\":" + String(tempKp) + ",\"tempKi\":" + String(tempKi) + ",\"tempKd\":" + String(tempKd) + ",\"humKp\":" + String(humKp) + ",\"humKi\":" + String(humKi) + ",\"humKd\":" + String(humKd) + "}";
+    request->send(200, "application/json", json);
+}
+
+void handlePIDSettingsUpdate(AsyncWebServerRequest *request) {
+    String tempKp     = request->getParam("tempKp")->value();
+    String tempKi     = request->getParam("tempKi")->value();
+    String tempKd     = request->getParam("tempKd")->value();
+    String humKp      = request->getParam("humKp")->value();
+    String humKi      = request->getParam("humKi")->value();
+    String humKd      = request->getParam("humKd")->value();
+    //debugFunctions.debugMessage("Received updatePIDSettings request with tempKp: " + tempKp + " tempKi: " + tempKi + " tempKd: " + tempKd + " humKp: " + humKp + " humKi: " + humKi + " humKd: " + humKd);
+    writeToFile("/tempKp.txt", tempKp, false);
+    writeToFile("/tempKi.txt", tempKi, false);
+    writeToFile("/tempKd.txt", tempKd, false);
+    writeToFile("/humKp.txt", humKp, false);
+    writeToFile("/humKi.txt", humKi, false);
+    writeToFile("/humKd.txt", humKd, false);
+    request->send(200, "text/plain", "OK");
+}
 
 void  loadSettings() {
   targetTemperature = readFromFile("/set_temp.txt").toFloat();
