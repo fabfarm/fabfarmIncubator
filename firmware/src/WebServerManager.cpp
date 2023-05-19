@@ -1,10 +1,91 @@
 #include "WebServerManager.h"
 
+#include <ArduinoJson.h>
+
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
+
 #include "DebugManager.h"
 #include "DisplayManager.h"
 #include "FileManager.h"
 #include "SensorManager.h"
 #include "config.h"
+
+struct DataPoint {
+    float x;
+    float y;
+};
+
+std::vector<DataPoint> extractDataFromCSV(const String &filename) {
+    std::vector<DataPoint> dataPoints;
+
+    fs::File file = readFile(filename.c_str());
+    if (!file) {
+        Serial.println("Failed to open file: " + filename);
+        return dataPoints;
+    }
+
+    String line;
+    while (file.available()) {
+        line = file.readStringUntil('\n');
+        line.trim();
+
+        int commaIndex = line.indexOf(',');
+        if (commaIndex == -1) {
+            Serial.println("Invalid line format: " + line);
+            continue;
+        }
+
+        String valueX = line.substring(0, commaIndex);
+        String valueY = line.substring(commaIndex + 1);
+
+        float x = valueX.toFloat();
+        float y = valueY.toFloat();
+
+        DataPoint dataPoint;
+        dataPoint.x = x;
+        dataPoint.y = y;
+
+        dataPoints.push_back(dataPoint);
+    }
+
+    file.close();
+
+    return dataPoints;
+}
+String restructureDataToJson(const std::vector<DataPoint> &temperatureData,
+                             const std::vector<DataPoint> &humidityData) {
+    debugMessage("Restructuring data to JSON");
+    DynamicJsonDocument doc(2048);
+
+    JsonArray  rootArr     = doc.createNestedArray();
+    JsonObject temperature = rootArr.createNestedObject();
+    JsonObject humidity    = rootArr.createNestedObject();
+    temperature["name"]    = "Daily Temperature";
+    humidity["name"]       = "Daily Humidity";
+
+    JsonArray tempDataArr = temperature.createNestedArray("data");
+    JsonArray humDataArr  = humidity.createNestedArray("data");
+
+    for (const auto &dataPoint : humidityData) {
+        JsonObject humData = humDataArr.createNestedObject();
+        humData["x"]       = dataPoint.x;
+        humData["y"]       = dataPoint.y;
+    }
+
+    for (const auto &dataPoint : temperatureData) {
+        JsonObject tempData = tempDataArr.createNestedObject();
+        tempData["x"]       = dataPoint.x;
+        tempData["y"]       = dataPoint.y;
+    }
+
+    String output;
+    serializeJson(doc, output);
+    return output;
+}
 
 void loadSettings() {
     targetTemperature     = readFromFile("/set_temp.txt").toFloat();
@@ -102,8 +183,15 @@ void handleDebugModeRequest(AsyncWebServerRequest *request) {
 }
 
 void handleDataFetchRequest(AsyncWebServerRequest *request) {
-    if (SPIFFS.exists("/data.txt")) {
-        request->send(SPIFFS, "/data.txt", "text/plain");
+    // File paths for temperature and humidity CSV files
+    String temperatureFileName = "/data_temp.csv";
+    String humidityFileName    = "/data_hum.csv";
+
+    if (SPIFFS.exists(temperatureFileName) && SPIFFS.exists(humidityFileName)) {
+        request->send(
+            200, "application/json",
+            restructureDataToJson(extractDataFromCSV(temperatureFileName),
+                                  extractDataFromCSV(humidityFileName)));
     } else {
         request->send(404, "text/plain", "Data not found.");
     }
