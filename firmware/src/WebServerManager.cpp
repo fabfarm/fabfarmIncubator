@@ -174,7 +174,7 @@ void handleIncubatorStatusToggle(AsyncWebServerRequest *request) {
 }
 
 void handleIncubatorStatusRequest(AsyncWebServerRequest *request) {
-    bool currentStatus = getIncubatorStatus();
+    bool   currentStatus = getIncubatorStatus();
     String jsonResponse =
         "{\"status\": " + String(currentStatus ? "false" : "true") + "}";
     request->send(200, "application/json", jsonResponse);
@@ -205,12 +205,27 @@ void handleDataFetchRequest(AsyncWebServerRequest *request) {
     }
 }
 
-void handleCurrentSensorDataRequest(AsyncWebServerRequest *request) {
-    float temperature   = bme.readTemperature();
-    float humidity      = bme.readHumidity();
-    String jsonResponse = "{ \"temperature\": " + String(temperature) +
-                          ", \"humidity\": " + String(humidity) + " }";
+void handleGetCurrentTemperature(AsyncWebServerRequest *request) {
+    float  temperature  = bme.readTemperature();
+    String jsonResponse = "{ \"temperature\": " + String(temperature) + " }";
     request->send(200, "application/json", jsonResponse);
+}
+
+void handleGetCurrentHumidity(AsyncWebServerRequest *request) {
+    float  humidity     = bme.readHumidity();
+    String jsonResponse = "{ \"humidity\": " + String(humidity) + " }";
+    request->send(200, "application/json", jsonResponse);
+}
+
+void handleResetDataRequest(AsyncWebServerRequest *request) {
+    if (SPIFFS.exists("/data_temp.csv") && SPIFFS.exists("/data_hum.csv")) {
+        writeToFile("/data_temp.csv", "", false);
+        writeToFile("/data_hum.csv", "", false);
+        debugMessage("DATA RESET");
+        request->send(200, "text/plain", "Data was reset.");
+    } else {
+        request->send(404, "text/plain", "Data not found.");
+    }
 }
 
 void initializeWebServer() {
@@ -219,11 +234,14 @@ void initializeWebServer() {
                                          "GET, POST, PUT, DELETE, OPTIONS");
     server.serveStatic("/assets/", SPIFFS, "/assets/");
     server.on("/", HTTP_GET, handleRootRequest);
-    server.on("/setTemperature", HTTP_GET, handleTemperatureSettingsUpdate);
-    server.on("/getTemperature", HTTP_GET, handleTemperatureSettingsRequest);
-    server.on("/setHumidity", HTTP_GET, handleHumiditySettingsUpdate);
-    server.on("/getHumidity", HTTP_GET, handleHumiditySettingsRequest);
-
+    server.on("/setTargetTemperature", HTTP_GET,
+              handleTemperatureSettingsUpdate);
+    server.on("/getTargetTemperature", HTTP_GET,
+              handleTemperatureSettingsRequest);
+    server.on("/getCurrentTemperature", HTTP_GET, handleGetCurrentTemperature);
+    server.on("/setTargetHumidity", HTTP_GET, handleHumiditySettingsUpdate);
+    server.on("/getTargetHumidity", HTTP_GET, handleHumiditySettingsRequest);
+    server.on("/getCurrentHumidity", HTTP_GET, handleGetCurrentHumidity);
     server.on("/setAngle", HTTP_GET, handleServoAngleUpdate);
     server.on("/getAngle", HTTP_GET, handleServoAngleRequest);
     server.on("/setInterval", HTTP_GET, handleServoIntervalUpdate);
@@ -237,7 +255,7 @@ void initializeWebServer() {
     server.on("/getDebugMode", HTTP_GET, handleDebugModeRequest);
 
     server.on("/fetchData", HTTP_GET, handleDataFetchRequest);
-    server.on("/getCurrentSensorData", HTTP_GET,
-              handleCurrentSensorDataRequest);
+    server.on("/resetData", HTTP_GET, handleResetDataRequest);
+
     server.begin();
 }
