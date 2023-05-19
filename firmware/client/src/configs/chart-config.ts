@@ -10,6 +10,9 @@ const chartsConfig = {
   dataLabels: {
     enabled: false,
   },
+  markers: {
+    size: 1,
+  },
   xaxis: {
     axisTicks: {
       show: false,
