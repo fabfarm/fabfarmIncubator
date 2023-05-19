@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A simple web application to control an ESP32 S3 incubator">
+  <meta name="keywords" content="ESP32, S3, Incubator, Control, Web Application">
+  <title>ESP32 S3 Incubator Control</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    form {
+      margin: 1em 0;
+    }
+    fieldset {
+      margin-bottom: 1em;
+      border: 3px solid black;
+      max-width: 300px;
+    }
+    input[type="number"] {
+      width: 80%;
+      max-width: 80px;
+    }
+    textarea {
+      width: 80%;
+      max-width: 300px;
+    }
+    @media screen and (min-width: 768px) {
+      input[type="number"], textarea {
+        width: 50%;
+      }
+    }
+  </style>
+</head>
+</head>
+<body>
+  <br>
+  <section>
+    <fieldset>
+      <h1>ESP32 S3 Incubator Control</h1>
+    </fieldset>
+  </section>
+  <section>
+    <fieldset>
+      <legend>Sensor Data</legend>
+      <p id="sensorData">Temperature: N/A °C | Humidity: N/A %</p>
+    </fieldset>
+  </section>
+  <section>
+    <form id="settingsForm" onsubmit="submitForm(event, 'updateSettings', updateSettings)">
+      <fieldset>
+        <legend>Temperature and Humidity Settings</legend>
+        <label for="temp">Temperature:</label>
+        <input type="number" id="temp" name="temp" step="0.01">
+        <br>
+        <label for="hum">Humidity:</label>
+        <input type="number" id="hum" name="hum">
+        <br>
+        <button type="submit">Update Settings</button>
+      </fieldset>
+    </form>
+  </section>
+  <section>
+    <form id="servoSettingsForm"  onsubmit="submitForm(event, 'updateServoSettings', updateServoSettings)">
+      <fieldset>
+        <legend>Servo Settings</legend>
+        <label for="angle">Servo Turn Angle:</label>
+        <input type="number" id="angle" name="angle" step="any" min="0" max="180">
+        <br>
+        <label for="interval">Servo Turn Interval:</label>
+        <input type="number" id="interval" name="interval" min="0">
+        <br>
+        <button type="submit">Update Servo Settings</button>
+      </fieldset>
+    </form>
+  </section>
+  <section>
+    <form id="pidSettingsForm"    onsubmit="submitForm(event, 'updatePidSettings', updatePidSettings)">
+      <fieldset>
+        <legend>PID Settings</legend>
+        <label for="tempKp">Temp Kp:</label>
+        <input type="number" id="tempKp" name="tempKp" step="0.01">
+        <br>
+        <label for="tempKi">Temp Ki:</label>
+        <input type="number" id="tempKi" name="tempKi" step="0.01">
+        <br>
+        <label for="tempKd">Temp Kd:</label>
+        <input type="number" id="tempKd" name="tempKd" step="0.01">
+        <br>
+        <label for="humKp">Hum Kp:</label>
+        <input type="number" id="humKp" name="humKp" step="0.01">
+        <br>
+        <label for="humKi">Hum Ki:</label>
+        <input type="number" id="humKi" name="humKi" step="0.01">
+        <br>
+        <label for="humKd">Hum Kd:</label>
+        <input type="number" id="humKd" name="humKd" step="0.01">
+        <br>
+        <button type="submit">Update PID Settings</button>
+      </fieldset>
+    </form>
+  </section>
+  <section>
+    <fieldset>
+      <legend>Incubator Operation</legend>
+      <button id="toggleIncubatorBtn">Toggle Incubator</button>
+      <p id="incubatorStatus">Status: Unknown</p>
+    </fieldset>
+  </section>
+  <section>
+    <fieldset>
+      <legend>Stored Data</legend>
+      <button id="fetchData">Fecth</button>
+      <textarea id="dataTextArea" rows="10" cols="30" readonly></textarea>
+    </fieldset>
+  </section>
+  <script>
+    function submitForm(event, endpoint, callback) {
+      event.preventDefault();
+      const formData = new FormData(event.target);
+      const searchParams = new URLSearchParams();
+
+      for (const [key, value] of formData.entries()) {
+        searchParams.append(key, value);
+      }
+
+      fetch(`/${endpoint}?${searchParams.toString()}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.text();
+        })
+        .then(data => {
+          console.log(`${endpoint} response:`, data);
+          callback();
+        })
+        .catch(error => {
+          console.error(`There was a problem with the ${endpoint} fetch operation:`, error);
+        });
+    }
+    function updateSettings() {}
+    function updateServoSettings() {}
+    function updatePidSettings() {}
+    function updateInputFields(id, value) {
+      document.getElementById(id).value = value;
+    }
+    function fetchAllSettings() {
+      fetch('/getCurrentSettings')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          updateInputFields('temp', data.temp);
+          updateInputFields('hum', data.hum);
+        })
+        .catch(error => {
+          console.error('There was a problem with the fetch operation:', error);
+        });
+
+      fetch('/getCurrentServoSettings')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          updateInputFields('angle', data.angle);
+          updateInputFields('interval', data.interval);
+        })
+        .catch(error => {
+          console.error('There was a problem with the fetch operation:', error);
+        });
+
+      fetch('/getCurrentPidSettings')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          updateInputFields('tempKp', data.tempKp);
+          updateInputFields('tempKi', data.tempKi);
+          updateInputFields('tempKd', data.tempKd);
+          updateInputFields('humKp', data.humKp);
+          updateInputFields('humKi', data.humKi);
+          updateInputFields('humKd', data.humKd);
+        })
+        .catch(error => {
+          console.error('There was a problem with the fetch operation:', error);
+        });
+    }
+    function toggleIncubator() {
+      fetch('/toggleIncubator')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          const status = data.status ? 'Active' : 'Inactive';
+          document.getElementById('incubatorStatus').innerText = 'Status: ' + status;
+        })
+        .catch(error => {
+          console.error('There was a problem with the fetch operation:', error);
+        });
+    }
+    async function fetchData() {
+      try {
+        const response = await fetch('/fetchData');
+
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+
+        const data = await response.text();
+        document.getElementById('dataTextArea').innerText = data;
+      } catch (error) {
+        console.error('There was a problem with the fetch operation:', error);
+      }
+    }
+    function fetchSensorData() {
+      fetch('/getSensorData')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          document.getElementById('sensorData').innerText = `Temperature: ${data.temperature.toFixed(1)} °C | Humidity: ${data.humidity.toFixed(1)} %`;
+        })
+        .catch(error => {
+          console.error('There was a problem with the fetch operation:', error);
+        });
+    }
+    function startSensorDataUpdate(interval) {
+      setInterval(() => {
+        fetchSensorData();
+      }, interval);
+    }
+    document.getElementById('toggleIncubatorBtn').addEventListener('click', toggleIncubator);
+    document.getElementById('fetchData').addEventListener('click', fetchData);
+    // Start updating sensor data every 5 seconds (5000 milliseconds)
+    startSensorDataUpdate(5000);
+    fetchAllSettings();
+  </script>
+</body>
+</html>
