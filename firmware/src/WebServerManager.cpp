@@ -6,6 +6,7 @@
 #include "DebugManager.h"
 
 void  handleRootRequest(AsyncWebServerRequest *request) {
+  loadSettings();
   request->send(SPIFFS, "/index.html", "text/html");
 }
 

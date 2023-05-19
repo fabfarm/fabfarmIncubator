@@ -47,8 +47,8 @@ extern const int servoClosedPosition;
 extern Adafruit_BME280   bme;
 extern TwoWire           I2CBME;
 
-#define       ON                  HIGH
-#define       OFF                 LOW 
+#define       ON                  LOW
+#define       OFF                 HIGH 
 
 #define       BLACK            0x0000
 #define       WHITE            0xFFFF
