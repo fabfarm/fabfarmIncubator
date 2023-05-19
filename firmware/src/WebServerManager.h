@@ -37,7 +37,7 @@ void handleIncubatorStatusToggle(AsyncWebServerRequest *request);
 void handleIncubatorStatusRequest(AsyncWebServerRequest *request);
 void handleDataFetchRequest(AsyncWebServerRequest *request);
 void handleCurrentSensorDataRequest(AsyncWebServerRequest *request);
-void    handleCurrentPidSettingsRequest(AsyncWebServerRequest *request);
-void    handlePidSettingsUpdate(AsyncWebServerRequest *request);
+void handleCurrentPidSettingsRequest(AsyncWebServerRequest *request);
+void handlePidSettingsUpdate(AsyncWebServerRequest *request);
 
 #endif
