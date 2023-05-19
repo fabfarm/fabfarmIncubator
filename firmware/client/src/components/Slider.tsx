@@ -1,4 +1,5 @@
 import { Slider } from "@material-tailwind/react";
+import debounce from "just-debounce-it";
 import React from "preact/compat";
 
 export default function SliderControl({
@@ -16,6 +17,12 @@ export default function SliderControl({
   setValue: (value: number) => void;
   unit?: string;
 }) {
+  const debouncer = debounce(
+    (event: React.ChangeEvent<HTMLDivElement>) =>
+      setValue(Number((event.target as Record<string, any>).value)),
+    1000
+  );
+
   return (
     <div className="flex flex-col gap-2">
       <h5 className="flex justify-center font-semibold">
@@ -29,9 +36,7 @@ export default function SliderControl({
         min={min}
         step="0.1"
         value={value}
-        onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-          setValue(Number(event.currentTarget.value))
-        }
+        onChange={debouncer}
         size="sm"
       />
     </div>

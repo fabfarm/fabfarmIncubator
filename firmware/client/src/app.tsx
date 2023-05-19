@@ -1,4 +1,5 @@
-import React from "preact/compat";
+import React, { useEffect, useState } from "preact/compat";
+import { useMutation, useQuery } from "react-query";
 import "./app.css";
 import StatisticsCard from "./components/StatisticsCard";
 import StatisticsChart from "./components/StatisticsChart";
@@ -6,32 +7,114 @@ import DropletIcon from "./components/icons/DropletIcon";
 import TemperatureIcon from "./components/icons/TemperatureIcon";
 import dailyHumidityChart from "./configs/humidity-config";
 import dailyTemperatureChart from "./configs/temperature-config";
-import { useQuery } from "react-query";
-import { Spinner } from "@material-tailwind/react";
+import { prefetchData } from "./main";
 
-export function App() {
-  const {
-    isLoading,
-    error,
-    data,
-  }: { isLoading: boolean; error: any; data: any } = useQuery({
-    queryKey: ["fetchData"],
-    queryFn: () =>
-      fetch([import.meta.env.VITE_SERVED_IP, "fetchData"].join("/"))
-        .then((res) => res.json())
-        .then((data) => console.log(data)),
+type DataPoint = {
+  x: number;
+  y: number;
+};
+
+export const fetchDataWrapper = async (endpoint: string, payload?: any) =>
+  await fetch(
+    `http://${import.meta.env.VITE_SERVED_IP}/${endpoint}`,
+    payload
+      ? {
+          method: "POST",
+          body: JSON.stringify(payload),
+          headers: { "Content-type": "application/json; charset=UTF-8" },
+        }
+      : undefined
+  ).then((res) => res.json());
+
+export const usePrefetchData = () =>
+  useQuery({
+    queryKey: ["prefetchData"],
+    initialData: prefetchData,
+    queryFn: () => fetchDataWrapper("fetchData"),
+    refetchInterval: 10000,
   });
 
-  if (isLoading) return <Spinner className="w-20 h-20 m-8"></Spinner>;
+export const useCurrentTemperature = () =>
+  useQuery({
+    queryKey: ["getCurrentTemperature"],
+    initialData: null,
+    queryFn: () => fetchDataWrapper("getCurrentTemperature"),
+    refetchInterval: 3000,
+  });
 
-  if (error)
-    return (
-      <>
-        {"An error has occurred, check that you are connecting to the correct IP: " +
-          error.message}
-      </>
-    );
+export const useCurrentHumidity = () =>
+  useQuery({
+    queryKey: ["getCurrentHumidity"],
+    initialData: null,
+    queryFn: () => fetchDataWrapper("getCurrentHumidity"),
+    refetchInterval: 2000,
+  });
 
+export const useTargetTemperature = () => [
+  useQuery({
+    queryKey: ["getTargetTemperature"],
+    initialData: null,
+    queryFn: () => fetchDataWrapper("getTargetTemperature"),
+  }).data,
+  useMutation({
+    mutationKey: ["setTargetTemperature"],
+    mutationFn: (payload) => fetchDataWrapper("setTargetTemperature", payload),
+    onMutate: (e) => console.log("Temperature mutation:", e),
+  }).mutate,
+];
+
+export const useTargetHumidity = () => [
+  useQuery({
+    queryKey: ["getTargetHumidity"],
+    initialData: null,
+    queryFn: () => fetchDataWrapper("getTargetHumidity"),
+  }).data,
+  useMutation({
+    mutationKey: ["setTargetHumidity"],
+    mutationFn: (payload) => fetchDataWrapper("setTargetHumidity", payload),
+    onMutate: (e) => console.log("Humidity mutation:", e),
+  }).mutate,
+];
+
+export function App() {
+  let response = usePrefetchData().data;
+  let currentHumidity = useCurrentHumidity().data?.humidity ?? "N/A";
+  let currentTemperature = useCurrentTemperature().data?.temperature ?? "N/A";
+
+  const [humidityXAxisData, setHumidityXAxisData] = useState([]);
+  const [humidityYAxisData, setHumidityYAxisData] = useState([]);
+  const [temperatureXAxisData, setTemperatureXAxisData] = useState([]);
+  const [temperatureYAxisData, setTemperatureYAxisData] = useState([]);
+
+  useEffect(() => {
+    if (response) {
+      const humidityResponse = response[0]?.[1];
+      const temperatureResponse = response[0]?.[0];
+      if (humidityResponse?.data) {
+        const humidityData = humidityResponse.data.map((obj: DataPoint) => ({
+          y: obj.y,
+          x: new Date(obj.x).getDate(),
+        }));
+        setHumidityYAxisData(
+          humidityData.map((obj: DataPoint) => obj.y?.toFixed(1))
+        );
+        setHumidityXAxisData(humidityData.map((obj: DataPoint) => obj.x));
+      }
+
+      if (temperatureResponse?.data) {
+        const temperatureData = temperatureResponse.data.map(
+          (obj: DataPoint) => ({
+            y: obj.y,
+            x: new Date(obj.x).getDate(),
+          })
+        );
+        setTemperatureYAxisData(
+          temperatureData.map((obj: DataPoint) => obj.y?.toFixed(1))
+        );
+        setTemperatureXAxisData(temperatureData.map((obj: DataPoint) => obj.x));
+      }
+    }
+  }, [response]);
   return (
     <>
       <header>🥚 Incubator</header>
@@ -42,7 +125,7 @@ export function App() {
             icon={React.createElement(DropletIcon, {
               className: "h-6 w-6 text-white",
             })}
-            value={"50"}
+            value={currentHumidity}
             title="Current Rel. Humidity"
           ></StatisticsCard>
           <StatisticsCard
@@ -50,7 +133,7 @@ export function App() {
             icon={React.createElement(TemperatureIcon, {
               className: "h-6 w-6 text-white",
             })}
-            value={"30°C"}
+            value={currentTemperature}
             title="Current Temp"
           ></StatisticsCard>
         </div>
@@ -60,12 +143,16 @@ export function App() {
             description="Rel. Humidity"
             chart={dailyHumidityChart}
             title="Daily Humidity"
+            xAxisData={humidityXAxisData}
+            yAxisData={humidityYAxisData}
           ></StatisticsChart>
           <StatisticsChart
             color="red"
             description="Temperature in Celcius"
             chart={dailyTemperatureChart}
             title="Daily Temperature"
+            xAxisData={temperatureXAxisData}
+            yAxisData={temperatureYAxisData}
           ></StatisticsChart>
         </div>
       </main>

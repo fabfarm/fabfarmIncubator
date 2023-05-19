@@ -6,13 +6,17 @@ import {
   Typography,
 } from "@material-tailwind/react";
 import Chart from "react-apexcharts";
+import dailyTemperatureChart from "../configs/temperature-config";
+import dailyHumidityChart from "../configs/humidity-config";
 
 type StatisticsChartProps = {
   color: string;
-  chart: unknown;
+  chart: typeof dailyTemperatureChart | typeof dailyHumidityChart;
   title: string;
   description: string;
   footer?: string | null;
+  xAxisData: any[];
+  yAxisData: any[];
 };
 
 export function StatisticsChart({
@@ -21,12 +25,21 @@ export function StatisticsChart({
   title,
   description,
   footer,
+  xAxisData,
+  yAxisData,
 }: StatisticsChartProps) {
   return (
     <Card>
       <CardHeader variant="gradient" color={color}>
         {/* @ts-ignore */}
-        <Chart {...chart} />
+        <Chart
+          {...chart}
+          options={{
+            ...chart.options,
+            xaxis: { ...chart.options.xaxis, categories: xAxisData },
+          }}
+          series={[{ name: chart.series[0].name, data: yAxisData }]}
+        />
       </CardHeader>
       <CardBody className="p-6">
         <Typography variant="h6" color="blue-gray">

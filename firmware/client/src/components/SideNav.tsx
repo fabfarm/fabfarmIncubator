@@ -22,11 +22,16 @@ import {
   SwatchIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import SliderControl from "./Slider";
 import DropletIcon from "./icons/DropletIcon";
 import TemperatureIcon from "./icons/TemperatureIcon";
 import React from "preact/compat";
+import {
+  fetchDataWrapper,
+  useTargetHumidity,
+  useTargetTemperature,
+} from "../app";
 
 enum INCUBATION_OP_STATUS {
   UNKNOWN = "Unknown",
@@ -35,9 +40,10 @@ enum INCUBATION_OP_STATUS {
 }
 
 export default function SideNav({ closeDrawer }: { closeDrawer: () => void }) {
+  const [targetTemperature, setTargetTemperature] = useTargetTemperature();
+  const [targetHumidity, setTargetHumidity] = useTargetHumidity();
+
   const [open, setOpen] = useState<number>(0);
-  const [temperature, setTemp] = useState<number>(30.0);
-  const [relHumidity, setRelHumidity] = useState<number>(50.0);
   const [servoTurnAngle, setServoTurnAngle] = useState<number>(45.0);
   const [servoIntervalMs, setServoIntervalMs] = useState<number>(1000);
   const [pidTemperatureKp, setPidTemperatureKp] = useState<number>();
@@ -60,7 +66,7 @@ export default function SideNav({ closeDrawer }: { closeDrawer: () => void }) {
   };
 
   const handleDataReset = () => {
-    // TODO: Implement data reset
+    fetchDataWrapper("resetData");
     handleToggleResetDataOpened();
   };
 
@@ -95,7 +101,7 @@ export default function SideNav({ closeDrawer }: { closeDrawer: () => void }) {
                 <TemperatureIcon className="h-5 w-5" />
               </ListItemPrefix>
               <Typography color="blue-gray" className="mr-auto font-normal">
-                Temperature
+                Target Temperature
               </Typography>
             </AccordionHeader>
           </ListItem>
@@ -103,8 +109,8 @@ export default function SideNav({ closeDrawer }: { closeDrawer: () => void }) {
             <List className="p-0 my-4">
               <SliderControl
                 unit="°C"
-                value={temperature}
-                setValue={setTemp}
+                value={targetTemperature?.temperature ?? NaN}
+                setValue={setTargetTemperature ?? (() => null)}
               ></SliderControl>
             </List>
           </AccordionBody>
@@ -129,7 +135,7 @@ export default function SideNav({ closeDrawer }: { closeDrawer: () => void }) {
                 <DropletIcon className="h-5 w-5" />
               </ListItemPrefix>
               <Typography color="blue-gray" className="mr-auto font-normal">
-                Relative Humidity
+                Target Rel. Humidity
               </Typography>
             </AccordionHeader>
           </ListItem>
@@ -137,8 +143,8 @@ export default function SideNav({ closeDrawer }: { closeDrawer: () => void }) {
             <List className="p-0 my-4">
               <SliderControl
                 unit="%"
-                value={relHumidity}
-                setValue={setRelHumidity}
+                value={targetHumidity?.humidity ?? NaN}
+                setValue={setTargetHumidity ?? (() => null)}
               ></SliderControl>
             </List>
           </AccordionBody>

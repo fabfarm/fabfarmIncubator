@@ -1,10 +1,15 @@
 import { render } from "preact";
-import { App } from "./app.tsx";
+import { App, fetchDataWrapper } from "./app.tsx";
 
 import { ThemeProvider } from "@material-tailwind/react";
-import SideNavDrawer from "./components/SideNavDrawer.tsx";
 import { QueryClient, QueryClientProvider } from "react-query";
+import SideNavDrawer from "./components/SideNavDrawer.tsx";
 const queryClient = new QueryClient();
+
+export const prefetchData = queryClient.prefetchQuery({
+  queryKey: ["prefetchData"],
+  queryFn: () => fetchDataWrapper("fetchData"),
+});
 
 render(
   <QueryClientProvider client={queryClient}>
