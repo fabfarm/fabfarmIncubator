@@ -40,8 +40,8 @@ int16_t         displayWidth     = 160;
 
 double    tempSetpoint = 0, tempInput = 0,  tempOutput = 0;
 double    humSetpoint = 0,  humInput = 0,   humOutput = 0;
-double    tempKp = 0, tempKi = 0, tempKd = 0;
-double    humKp = 0, humKi = 0, humKd = 0;
+double    tempKp = 2, tempKi = 5, tempKd = 1;
+double    humKp = 2, humKi = 5, humKd = 1;
 
 PID tempPID(&tempInput, &tempOutput,  &tempSetpoint,  tempKp, tempKi, tempKd, DIRECT);
 PID humPID(&humInput,   &humOutput,   &humSetpoint,   humKp,  humKi,  humKd,  DIRECT);
