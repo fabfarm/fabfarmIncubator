@@ -214,6 +214,9 @@ void handleCurrentSensorDataRequest(AsyncWebServerRequest *request) {
 }
 
 void initializeWebServer() {
+    DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
+    DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods",
+                                         "GET, POST, PUT, DELETE, OPTIONS");
     server.serveStatic("/assets/", SPIFFS, "/assets/");
     server.on("/", HTTP_GET, handleRootRequest);
     server.on("/setTemperature", HTTP_GET, handleTemperatureSettingsUpdate);
