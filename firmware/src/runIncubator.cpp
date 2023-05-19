@@ -10,7 +10,7 @@
 
 void runIncubator() {
     static unsigned long previousMillis = 0;
-    const unsigned long  interval       = 1000 * 60;  // Pause duration
+    const unsigned long  interval       = 5000;  // Pause duration
 
     unsigned long currentMillis = millis();
 
@@ -42,12 +42,12 @@ void runIncubator() {
             return;
         }
         writeToFile("/data_temp.csv",
-                    String(currentTemperature) + "," +
-                        String(getMillisecondsSinceEpoch()) + "\n",
+                    String(getMillisecondsSinceEpoch()) + "," +
+                        String(currentTemperature) + "\n",
                     true);
         writeToFile("/data_hum.csv",
-                    String(currentHumidity) + "," +
-                        String(getMillisecondsSinceEpoch()) + "\n",
+                    String(getMillisecondsSinceEpoch()) + "," +
+                        String(currentHumidity) + "\n",
                     true);
         debugMessage("Data saved to SPIFFS");
         controlHeatElementMosfet(currentTemperature, targetTemperature);
