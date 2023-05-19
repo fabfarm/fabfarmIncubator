@@ -15,6 +15,7 @@
     "@material-tailwind/react": "^2.0.0",
     "clsx": "^1.2.1",
     "feather-icons": "^4.29.0",
+    "just-debounce-it": "^3.2.0",
     "preact": "^10.13.1",
     "react-apexcharts": "^1.4.0",
     "react-query": "^3.39.3"

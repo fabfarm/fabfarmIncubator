@@ -7,6 +7,7 @@ specifiers:
   autoprefixer: ^10.4.14
   clsx: ^1.2.1
   feather-icons: ^4.29.0
+  just-debounce-it: ^3.2.0
   postcss: ^8.4.23
   preact: ^10.13.1
   react-apexcharts: ^1.4.0
@@ -21,6 +22,7 @@ dependencies:
   '@material-tailwind/react': 2.0.0_biqbaboplfbrettd7655fr4n2y
   clsx: 1.2.1
   feather-icons: 4.29.0
+  just-debounce-it: 3.2.0
   preact: 10.13.2
   react-apexcharts: 1.4.0_fnhcsb7lygaadw7ghmriwdk5ma
   react-query: 3.39.3_biqbaboplfbrettd7655fr4n2y
@@ -1236,6 +1238,10 @@ packages:
     optionalDependencies:
       graceful-fs: 4.2.11
     dev: true
+
+  /just-debounce-it/3.2.0:
+    resolution: {integrity: sha512-WXzwLL0745uNuedrCsCs3rpmfD6DBaf7uuVwaq98/8dafURfgQaBsSpjiPp5+CW6Vjltwy9cOGI6qE71b3T8iQ==}
+    dev: false
 
   /kolorist/1.8.0:
     resolution: {integrity: sha512-Y+60/zizpJ3HRH8DCss+q95yr6145JXZo46OTpFvDZWLfRCE4qChOyk1b26nMaNpfHHgxagk9dXT5OP0Tfe+dQ==}
