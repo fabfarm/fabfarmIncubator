@@ -80,7 +80,7 @@
     </form>
   </section>
   <section>
-    <form id="pidSettingsForm"    onsubmit="submitForm(event, 'updatePIDSettings', updatePIDSettings)">
+    <form id="pidSettingsForm"    onsubmit="submitForm(event, 'updatePidSettings', updatePidSettings)">
       <fieldset>
         <legend>PID Settings</legend>
         <label for="tempKp">Temp Kp:</label>
@@ -146,7 +146,7 @@
     }
     function updateSettings() {}
     function updateServoSettings() {}
-    function updatePIDSettings() {}
+    function updatePidSettings() {}
     function updateInputFields(id, value) {
       document.getElementById(id).value = value;
     }
@@ -181,7 +181,7 @@
           console.error('There was a problem with the fetch operation:', error);
         });
 
-      fetch('/getCurrentPIDSettings')
+      fetch('/getCurrentPidSettings')
         .then(response => {
           if (!response.ok) {
             throw new Error('Network response was not ok');

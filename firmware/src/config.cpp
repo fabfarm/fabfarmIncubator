@@ -38,10 +38,10 @@ TFT_eSPI        tft              = TFT_eSPI();
 int16_t         displayHeight    = 128;
 int16_t         displayWidth     = 160;
 
-double    tempSetpoint, tempInput,  tempOutput;
-double    humSetpoint,  humInput,   humOutput;
-double    tempKp, tempKi, tempKd;
-double    humKp, humKi, humKd;
+double    tempSetpoint = 0, tempInput = 0,  tempOutput = 0;
+double    humSetpoint = 0,  humInput = 0,   humOutput = 0;
+double    tempKp = 0, tempKi = 0, tempKd = 0;
+double    humKp = 0, humKi = 0, humKd = 0;
 
 PID tempPID(&tempInput, &tempOutput,  &tempSetpoint,  tempKp, tempKi, tempKd, DIRECT);
 PID humPID(&humInput,   &humOutput,   &humSetpoint,   humKp,  humKi,  humKd,  DIRECT);
