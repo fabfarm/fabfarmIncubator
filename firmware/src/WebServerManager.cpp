@@ -125,7 +125,15 @@ void handleServoIntervalRequest(AsyncWebServerRequest *request) {
 }
 
 void handleRootRequest(AsyncWebServerRequest *request) {
-    request->send(SPIFFS, "/index.html", "text/html");
+    // Set the appropriate Content-Type for each file
+    if (request->url().endsWith(".gz")) {
+        AsyncWebServerResponse *response = request->beginResponse(
+            SPIFFS, request->url(), "application/octet-stream");
+        response->addHeader("Content-Encoding", "gzip");
+        request->send(response);
+    } else {
+        request->send(SPIFFS, "/index.html", "text/html");
+    }
 }
 
 void handleTemperatureSettingsUpdate(AsyncWebServerRequest *request) {
@@ -206,6 +214,7 @@ void handleCurrentSensorDataRequest(AsyncWebServerRequest *request) {
 }
 
 void initializeWebServer() {
+    server.serveStatic("/assets/", SPIFFS, "/assets/");
     server.on("/", HTTP_GET, handleRootRequest);
     server.on("/setTemperature", HTTP_GET, handleTemperatureSettingsUpdate);
     server.on("/getTemperature", HTTP_GET, handleTemperatureSettingsRequest);
