@@ -3,10 +3,7 @@ AlignConsecutiveAssignments: true
 IndentWidth: 4
 AlignTrailingComments: true
 AllowShortFunctionsOnASingleLine: InlineOnly
-AllowShortIfStatementsOnASingleLine: true
-AllowShortBlocksOnASingleLine: true
-AllowShortCaseLabelsOnASingleLine: true
-BinPackParameters: false
-ConstructorInitializerAllOnOneLineOrOnePerLine: true
-PointerAlignment: Right
-SpaceBeforeCpp11BracedList: false
+NamespaceIndentation: None
+IndentCaseLabels: false
+AlignConsecutiveDeclarations: true
+AlignEscapedNewlines: Left

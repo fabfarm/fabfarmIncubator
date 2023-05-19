@@ -1,15 +1,12 @@
 // Fabfarm Egg Incubator
 // Written by: Lucio
 
-#include "WebServerManager.h"
-#include "config.h"
-#include "FileManager.h"
-#include "WifiManagerHelper.h"
+#include "DebugManager.h"
 #include "DisplayManager.h"
+#include "FileManager.h"
 #include "SensorManager.h"
 #include "ServoManager.h"
-#include "DebugManager.h"
-#include "runIncubator.h"
+#include "WebServerManager.h"
 #include "WifiManagerHelper.h"
 #include "pidManager.h"
 
@@ -32,6 +29,6 @@ void setup() {
 }
 
 void loop() {
-  wifiManagerTrigerPinSetup();
-  runIncubator();
+    wifiManagerTrigerPinSetup();
+    runIncubator();
 }
