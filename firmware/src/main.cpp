@@ -1,13 +1,15 @@
 // Fabfarm Egg Incubator
 // Written by: Lucio
 
-#include "DebugManager.h"
-#include "DisplayManager.h"
+#include "WebServerManager.h"
+#include "config.h"
 #include "FileManager.h"
+#include "WifiManagerHelper.h"
+#include "DisplayManager.h"
 #include "SensorManager.h"
 #include "ServoManager.h"
-#include "WebServerManager.h"
-#include "WifiManagerHelper.h"
+#include "DebugManager.h"
+#include "runIncubator.h"
 #include "pidManager.h"
 
 

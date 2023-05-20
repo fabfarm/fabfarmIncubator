@@ -15,6 +15,7 @@
 #include <ESPAsyncWebServer.h>
 #include "NotoSansBold15.h"
 #include <AsyncElegantOTA.h> // For over-the-air updates
+#include <ArduinoJson.h>
 
 extern bool      debugMode;
 extern int       currentHumidity;

@@ -1,19 +1,4 @@
 #include "WebServerManager.h"
-
-#include <ArduinoJson.h>
-
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <vector>
-
-#include "DebugManager.h"
-#include "DisplayManager.h"
-#include "FileManager.h"
-#include "SensorManager.h"
-#include "config.h"
-
 struct DataPoint {
     float x;
     float y;
@@ -88,16 +73,16 @@ String restructureDataToJson(const std::vector<DataPoint> &temperatureData,
 }
 
 void loadSettings() {
-    targetTemperature     = readFromFile("/set_temp.txt").toFloat();
-    targetHumidity        = readFromFile("/set_hum.txt").toInt();
-    trayServoTurnAngle    = readFromFile("/trayServoTurnAngle.txt").toFloat();
-    trayServoTurnInterval = readFromFile("/interval.txt").toFloat();
-    tempKp = readFromFile("/tempKp.txt").toFloat();
-    tempKi = readFromFile("/tempKi.txt").toFloat();
-    tempKd = readFromFile("/tempKd.txt").toFloat();
-    humKp = readFromFile("/humKp.txt").toFloat();
-    humKi = readFromFile("/humKi.txt").toFloat();
-    humKd = readFromFile("/humKd.txt").toFloat();
+    targetTemperature       = readFromFile("/set_temp.txt").toFloat();
+    targetHumidity          = readFromFile("/set_hum.txt").toInt();
+    trayServoTurnAngle      = readFromFile("/trayServoTurnAngle.txt").toFloat();
+    trayServoTurnInterval   = readFromFile("/interval.txt").toFloat();
+    tempKp                  = readFromFile("/tempKp.txt").toFloat();
+    tempKi                  = readFromFile("/tempKi.txt").toFloat();
+    tempKd                  = readFromFile("/tempKd.txt").toFloat();
+    humKp                   = readFromFile("/humKp.txt").toFloat();
+    humKi                   = readFromFile("/humKi.txt").toFloat();
+    humKd                   = readFromFile("/humKd.txt").toFloat();
     debugMessage("Loaded settings from files");
 }
 
@@ -118,15 +103,6 @@ void handleServoAngleRequest(AsyncWebServerRequest *request) {
     String json = "{\"angle\":" + String(trayServoTurnAngle) + "}";
     request->send(200, "application/json", json);
 }
-void  handleTemperatureHumiditySettingsUpdate(AsyncWebServerRequest *request) {
-  String temp = request->getParam("temp")->value();
-  String hum = request->getParam("hum")->value();
-  targetTemperature = temp.toFloat();
-  targetHumidity = hum.toInt();
-  debugMessage("Received updateSettings request with temp: " + temp + " and hum: " + hum);
-  writeToFile("/set_temp.txt", String(targetTemperature), false);
-  writeToFile("/set_hum.txt", String(targetHumidity), false);
-  request->send(200, "text/plain", "OK");
 
 void handleServoIntervalUpdate(AsyncWebServerRequest *request) {
     String trayServoTurnInterval = request->getParam("interval")->value();

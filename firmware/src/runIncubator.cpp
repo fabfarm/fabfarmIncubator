@@ -61,11 +61,8 @@ void runIncubator() {
 }
 
 int getMillisecondsSinceEpoch() {
-    auto    now = std::chrono::system_clock::now();
-    int64_t milliseconds =
-        std::chrono::duration_cast<std::chrono::milliseconds>(
-            now.time_since_epoch())
-            .count();
+
+    unsigned long milliseconds = millis();
 
     return milliseconds;
 }
