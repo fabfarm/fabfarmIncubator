@@ -86,7 +86,6 @@ void loadSettings() {
     debugMessage("Loaded settings from files");
 }
 
-
 bool getIncubatorStatus() {
     return readFromFile("/set_status.txt").toInt() == 1;
 }
@@ -160,10 +159,8 @@ void handleHumiditySettingsRequest(AsyncWebServerRequest *request) {
 void handleIncubatorStatusToggle(AsyncWebServerRequest *request) {
     bool currentStatus = getIncubatorStatus();
     writeToFile("/set_status.txt", currentStatus ? "0" : "1");
-    String jsonResponse =
-        "{\"status\": " + String(currentStatus ? "false" : "true") + "}";
-    debugMessage("Toggled incubator status to: relay" +
-                 String(currentStatus ? "Off" : "On"));
+    String jsonResponse = "{\"status\": " + String(currentStatus ? "false" : "true") + "}";
+    debugMessage("Toggled incubator status to: relay" + String(currentStatus ? "Off" : "On"));
     request->send(200, "application/json", jsonResponse);
 }
 
@@ -243,9 +240,6 @@ void initializeWebServer() {
     server.on("/getInterval", HTTP_GET, handleServoIntervalRequest);
 
     server.on("/toggleIncubator", HTTP_GET, handleIncubatorStatusToggle);
-    server.on("/getIncubatorOperationStatus", HTTP_GET,
-              handleIncubatorStatusRequest);
-
     server.on("/toggleDebugMode", HTTP_GET, handleDebugModeToggle);
     server.on("/getDebugMode", HTTP_GET, handleDebugModeRequest);
 
@@ -253,9 +247,49 @@ void initializeWebServer() {
     server.on("/resetData", HTTP_GET, handleResetDataRequest);
     server.on("/getCurrentPidSettings", HTTP_GET, handleCurrentPidSettingsRequest);
     server.on("/updatePidSettings", HTTP_GET, handlePidSettingsUpdate);
+    
+    // for ./assets/barebone.html
+    server.on("/getIncubatorStatus", HTTP_GET, handleIncubatorStatusRequest);
+    server.on("/updateServoSettings", HTTP_GET, handleServoSettingsUpdate);
+    server.on("/getCurrentSettings", HTTP_GET, handleCurrentSettingsRequest);
+    server.on("/getCurrentServoSettings", HTTP_GET, handleCurrentServoSettingsRequest);
+    server.on("/getSensorData", HTTP_GET, handleSensorDataRequest);
+    server.on("/updateSettings", HTTP_GET, handleTemperatureHumiditySettingsUpdate);
     server.begin();
 }
 
+void  handleServoSettingsUpdate(AsyncWebServerRequest *request) {
+  String trayServoTurnAngle      = request->getParam("angle")->value();
+  String trayServoTurnInterval   = request->getParam("interval")->value();
+  debugMessage("Received updateServoSettings request with angle: " + trayServoTurnAngle + " and interval: " + trayServoTurnInterval);
+  writeToFile("/trayServoTurnAngle.txt", trayServoTurnAngle, false);
+  writeToFile("/interval.txt", trayServoTurnInterval, false);
+  request->send(200, "text/plain", "OK");
+}
+void  handleCurrentServoSettingsRequest(AsyncWebServerRequest *request) {
+  String json = "{\"angle\":" + String(trayServoTurnAngle) + ",\"interval\":" + String(trayServoTurnInterval) + "}";	
+  request->send(200, "application/json", json);
+}
+void handleCurrentSettingsRequest(AsyncWebServerRequest *request) {
+  String json = "{\"temp\":" + String(targetTemperature) + ",\"hum\":" + String(targetHumidity) + "}";
+  request->send(200, "application/json", json);
+}
+void  handleTemperatureHumiditySettingsUpdate(AsyncWebServerRequest *request) {
+  String temp = request->getParam("temp")->value();
+  String hum = request->getParam("hum")->value();
+  targetTemperature = temp.toFloat();
+  targetHumidity = hum.toInt();
+  debugMessage("Received updateSettings request with temp: " + temp + " and hum: " + hum);
+  writeToFile("/set_temp.txt", String(targetTemperature), false);
+  writeToFile("/set_hum.txt", String(targetHumidity), false);
+  request->send(200, "text/plain", "OK");
+}
+void  handleSensorDataRequest(AsyncWebServerRequest *request) {
+  float temperature = bme.readTemperature();
+  float humidity = bme.readHumidity();
+  String jsonResponse = "{ \"temperature\": " + String(temperature) + ", \"humidity\": " + String(humidity) + " }";
+  request->send(200, "application/json", jsonResponse);
+}
 void handleCurrentPidSettingsRequest(AsyncWebServerRequest *request) {
   String json = "{\"tempKp\":" + String(tempKp) + ",\"tempKi\":" + String(tempKi) + ",\"tempKd\":" + String(tempKd) + ",\"humKp\":" + String(humKp) + ",\"humKi\":" + String(humKi) + ",\"humKd\":" + String(humKd) + "}";
   request->send(200, "application/json", json);

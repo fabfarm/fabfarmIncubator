@@ -4,8 +4,8 @@
 void runIncubator();
 
 void controlHumidityVentServo(int currentHumidity, int targetHumidity);
-int  getMillisecondsSinceEpoch();
-void controlHeatElementMosfet(float currentTemperature,
-                              float targetTemperature);
+void controlHeatElementMosfet(float currentTemperature, float targetTemperature);
+bool hasIntervalPassed(unsigned long intervalMillis);
+
 
 #endif
