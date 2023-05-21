@@ -2,7 +2,7 @@
 #define WIFI_MANAGER_HELPER_H
 
 #include <Arduino.h>
-#include <wifiManager.h>
+#include <WifiManagerHelper.h>
 
 void wifiManagerSetup();
 
