@@ -76,7 +76,7 @@ void loadSettings() {
     targetTemperature       = readFromFile("/set_temp.txt").toFloat();
     targetHumidity          = readFromFile("/set_hum.txt").toInt();
     trayServoTurnAngle      = readFromFile("/trayServoTurnAngle.txt").toFloat();
-    trayServoTurnInterval   = readFromFile("/interval.txt").toFloat();
+    trayServoTurnInterval   = readFromFile("/trayServoInterval.txt").toFloat();
     tempKp                  = readFromFile("/tempKp.txt").toFloat();
     tempKi                  = readFromFile("/tempKi.txt").toFloat();
     tempKd                  = readFromFile("/tempKd.txt").toFloat();
@@ -107,7 +107,7 @@ void handleServoIntervalUpdate(AsyncWebServerRequest *request) {
     String trayServoTurnInterval = request->getParam("interval")->value();
     debugMessage("Received updateServoInterval request with interval: " +
                  trayServoTurnInterval);
-    writeToFile("/interval.txt", trayServoTurnInterval, false);
+    writeToFile("/trayServoInterval.txt", trayServoTurnInterval, false);
     request->send(200, "text/plain", "OK");
 }
 
@@ -263,7 +263,7 @@ void  handleServoSettingsUpdate(AsyncWebServerRequest *request) {
   String trayServoTurnInterval   = request->getParam("interval")->value();
   debugMessage("Received updateServoSettings request with angle: " + trayServoTurnAngle + " and interval: " + trayServoTurnInterval);
   writeToFile("/trayServoTurnAngle.txt", trayServoTurnAngle, false);
-  writeToFile("/interval.txt", trayServoTurnInterval, false);
+  writeToFile("/trayServoInterval.txt", trayServoTurnInterval, false);
   request->send(200, "text/plain", "OK");
 }
 void  handleCurrentServoSettingsRequest(AsyncWebServerRequest *request) {

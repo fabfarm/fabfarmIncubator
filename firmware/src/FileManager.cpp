@@ -45,5 +45,6 @@ fs::File readFile(const char *fileName) {
         return fs::File();
     }
     fs::File file = SPIFFS.open(fileName, "r");
+    file.close();
     return file;
 }

@@ -14,7 +14,7 @@
 #include <SPI.h>
 #include <ESPAsyncWebServer.h>
 #include "NotoSansBold15.h"
-#include <AsyncElegantOTA.h> // For over-the-air updates
+//#include <AsyncElegantOTA.h> // For over-the-air updates
 #include <ArduinoJson.h>
 
 extern bool      debugMode;
@@ -59,6 +59,10 @@ extern TwoWire           I2CBME;
 
 // select which pin will trigger the configuration portal when set to LOW
 #define TRIGGER_PIN 0
+extern bool wm_nonblocking; // change to true to use non blocking
+extern WiFiManager wm; // global wm instance
+extern WiFiManagerParameter custom_field; // global param ( for non blocking w params )
+
 extern int timeout;
 
 extern AsyncWebServer  server;

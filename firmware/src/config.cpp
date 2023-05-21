@@ -28,6 +28,10 @@ const int servoClosedPosition   = 200;
 Adafruit_BME280   bme;
 TwoWire           I2CBME        = TwoWire(0);
 
+bool wm_nonblocking = true; // change to true to use non blocking
+WiFiManager wm; // global wm instance
+WiFiManagerParameter custom_field; // global param ( for non blocking w params )
+
 int timeout = 120;
 
 AsyncWebServer  server(80);

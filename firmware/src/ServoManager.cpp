@@ -14,7 +14,7 @@ void controlTrayServo() {
 
     // Read the interval and angle from the SD card
     int trayServoTurnInterval, trayServoTurnAngle;
-    trayServoTurnInterval = readFromFile("/interval.txt").toFloat();
+    trayServoTurnInterval = readFromFile("/trayServoInterval.txt").toFloat();
     trayServoTurnAngle = readFromFile("/trayServoTurnAngle.txt").toFloat();
 
     // If we have waited long enough...
