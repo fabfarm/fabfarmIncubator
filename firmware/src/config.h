@@ -41,6 +41,7 @@ extern float     minTemperature;
 extern float     maxTemperature;
 extern float     minHumidity;
 extern float     maxHumidity;
+
 extern const int mosfetPin;
 extern const int humidityVentServoPin;
 extern const int trayServoPin;
