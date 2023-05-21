@@ -73,16 +73,16 @@ String restructureDataToJson(const std::vector<DataPoint> &temperatureData,
 }
 
 void loadSettings() {
-    targetTemperature       = readFromFile("/set_temp.txt").toFloat();
-    targetHumidity          = readFromFile("/set_hum.txt").toInt();
-    trayServoTurnAngle      = readFromFile("/trayServoTurnAngle.txt").toFloat();
-    trayServoTurnInterval   = readFromFile("/trayServoInterval.txt").toFloat();
-    tempKp                  = readFromFile("/tempKp.txt").toFloat();
-    tempKi                  = readFromFile("/tempKi.txt").toFloat();
-    tempKd                  = readFromFile("/tempKd.txt").toFloat();
-    humKp                   = readFromFile("/humKp.txt").toFloat();
-    humKi                   = readFromFile("/humKi.txt").toFloat();
-    humKd                   = readFromFile("/humKd.txt").toFloat();
+    targetTemperature     = readFromFile("/set_temp.txt").toFloat();
+    targetHumidity        = readFromFile("/set_hum.txt").toInt();
+    trayServoTurnAngle    = readFromFile("/trayServoTurnAngle.txt").toFloat();
+    trayServoTurnInterval = readFromFile("/trayServoInterval.txt").toFloat();
+    tempKp                = readFromFile("/tempKp.txt").toFloat();
+    tempKi                = readFromFile("/tempKi.txt").toFloat();
+    tempKd                = readFromFile("/tempKd.txt").toFloat();
+    humKp                 = readFromFile("/humKp.txt").toFloat();
+    humKi                 = readFromFile("/humKi.txt").toFloat();
+    humKd                 = readFromFile("/humKd.txt").toFloat();
     debugMessage("Loaded settings from files");
 }
 
@@ -158,9 +158,14 @@ void handleHumiditySettingsRequest(AsyncWebServerRequest *request) {
 
 void handleIncubatorStatusToggle(AsyncWebServerRequest *request) {
     bool currentStatus = getIncubatorStatus();
-    writeToFile("/set_status.txt", currentStatus ? "0" : "1");
-    String jsonResponse = "{\"status\": " + String(currentStatus ? "false" : "true") + "}";
-    debugMessage("Toggled incubator status to: relay" + String(currentStatus ? "Off" : "On"));
+    writeToFile("/set_status.txt", currentStatus ? "0" : "1", false);
+    debugMessage("Incubator status file contents" +
+                 readFromFile("/set_status.txt"));
+
+    String jsonResponse =
+        "{\"status\": " + String(currentStatus ? "false" : "true") + "}";
+    debugMessage("Toggled incubator status to:" +
+                 String(currentStatus ? "Off" : "On"));
     request->send(200, "application/json", jsonResponse);
 }
 
@@ -220,7 +225,6 @@ void handleResetDataRequest(AsyncWebServerRequest *request) {
 }
 
 void initializeWebServer() {
-
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods",
                                          "GET, POST, PUT, DELETE, OPTIONS");
@@ -245,63 +249,77 @@ void initializeWebServer() {
 
     server.on("/fetchData", HTTP_GET, handleDataFetchRequest);
     server.on("/resetData", HTTP_GET, handleResetDataRequest);
-    server.on("/getCurrentPidSettings", HTTP_GET, handleCurrentPidSettingsRequest);
+    server.on("/getCurrentPidSettings", HTTP_GET,
+              handleCurrentPidSettingsRequest);
     server.on("/updatePidSettings", HTTP_GET, handlePidSettingsUpdate);
-    
+
     // for ./assets/barebone.html
     server.on("/getIncubatorStatus", HTTP_GET, handleIncubatorStatusRequest);
     server.on("/updateServoSettings", HTTP_GET, handleServoSettingsUpdate);
     server.on("/getCurrentSettings", HTTP_GET, handleCurrentSettingsRequest);
-    server.on("/getCurrentServoSettings", HTTP_GET, handleCurrentServoSettingsRequest);
+    server.on("/getCurrentServoSettings", HTTP_GET,
+              handleCurrentServoSettingsRequest);
     server.on("/getSensorData", HTTP_GET, handleSensorDataRequest);
-    server.on("/updateSettings", HTTP_GET, handleTemperatureHumiditySettingsUpdate);
+    server.on("/updateSettings", HTTP_GET,
+              handleTemperatureHumiditySettingsUpdate);
     server.begin();
 }
 
-void  handleServoSettingsUpdate(AsyncWebServerRequest *request) {
-  String trayServoTurnAngle      = request->getParam("angle")->value();
-  String trayServoTurnInterval   = request->getParam("interval")->value();
-  debugMessage("Received updateServoSettings request with angle: " + trayServoTurnAngle + " and interval: " + trayServoTurnInterval);
-  writeToFile("/trayServoTurnAngle.txt", trayServoTurnAngle, false);
-  writeToFile("/trayServoInterval.txt", trayServoTurnInterval, false);
-  request->send(200, "text/plain", "OK");
+void handleServoSettingsUpdate(AsyncWebServerRequest *request) {
+    String trayServoTurnAngle    = request->getParam("angle")->value();
+    String trayServoTurnInterval = request->getParam("interval")->value();
+    debugMessage("Received updateServoSettings request with angle: " +
+                 trayServoTurnAngle +
+                 " and interval: " + trayServoTurnInterval);
+    writeToFile("/trayServoTurnAngle.txt", trayServoTurnAngle, false);
+    writeToFile("/trayServoInterval.txt", trayServoTurnInterval, false);
+    request->send(200, "text/plain", "OK");
 }
-void  handleCurrentServoSettingsRequest(AsyncWebServerRequest *request) {
-  String json = "{\"angle\":" + String(trayServoTurnAngle) + ",\"interval\":" + String(trayServoTurnInterval) + "}";	
-  request->send(200, "application/json", json);
+void handleCurrentServoSettingsRequest(AsyncWebServerRequest *request) {
+    String json = "{\"angle\":" + String(trayServoTurnAngle) +
+                  ",\"interval\":" + String(trayServoTurnInterval) + "}";
+    request->send(200, "application/json", json);
 }
 void handleCurrentSettingsRequest(AsyncWebServerRequest *request) {
-  String json = "{\"temp\":" + String(targetTemperature) + ",\"hum\":" + String(targetHumidity) + "}";
-  request->send(200, "application/json", json);
+    String json = "{\"temp\":" + String(targetTemperature) +
+                  ",\"hum\":" + String(targetHumidity) + "}";
+    request->send(200, "application/json", json);
 }
-void  handleTemperatureHumiditySettingsUpdate(AsyncWebServerRequest *request) {
-  String temp = request->getParam("temp")->value();
-  String hum = request->getParam("hum")->value();
-  targetTemperature = temp.toFloat();
-  targetHumidity = hum.toInt();
-  debugMessage("Received updateSettings request with temp: " + temp + " and hum: " + hum);
-  writeToFile("/set_temp.txt", String(targetTemperature), false);
-  writeToFile("/set_hum.txt", String(targetHumidity), false);
-  request->send(200, "text/plain", "OK");
+void handleTemperatureHumiditySettingsUpdate(AsyncWebServerRequest *request) {
+    String temp       = request->getParam("temp")->value();
+    String hum        = request->getParam("hum")->value();
+    targetTemperature = temp.toFloat();
+    targetHumidity    = hum.toInt();
+    debugMessage("Received updateSettings request with temp: " + temp +
+                 " and hum: " + hum);
+    writeToFile("/set_temp.txt", String(targetTemperature), false);
+    writeToFile("/set_hum.txt", String(targetHumidity), false);
+    request->send(200, "text/plain", "OK");
 }
-void  handleSensorDataRequest(AsyncWebServerRequest *request) {
-  float temperature = bme.readTemperature();
-  float humidity = bme.readHumidity();
-  String jsonResponse = "{ \"temperature\": " + String(temperature) + ", \"humidity\": " + String(humidity) + " }";
-  request->send(200, "application/json", jsonResponse);
+void handleSensorDataRequest(AsyncWebServerRequest *request) {
+    float  temperature  = bme.readTemperature();
+    float  humidity     = bme.readHumidity();
+    String jsonResponse = "{ \"temperature\": " + String(temperature) +
+                          ", \"humidity\": " + String(humidity) + " }";
+    request->send(200, "application/json", jsonResponse);
 }
 void handleCurrentPidSettingsRequest(AsyncWebServerRequest *request) {
-  String json = "{\"tempKp\":" + String(tempKp) + ",\"tempKi\":" + String(tempKi) + ",\"tempKd\":" + String(tempKd) + ",\"humKp\":" + String(humKp) + ",\"humKi\":" + String(humKi) + ",\"humKd\":" + String(humKd) + "}";
-  request->send(200, "application/json", json);
+    String json =
+        "{\"tempKp\":" + String(tempKp) + ",\"tempKi\":" + String(tempKi) +
+        ",\"tempKd\":" + String(tempKd) + ",\"humKp\":" + String(humKp) +
+        ",\"humKi\":" + String(humKi) + ",\"humKd\":" + String(humKd) + "}";
+    request->send(200, "application/json", json);
 }
 void handlePidSettingsUpdate(AsyncWebServerRequest *request) {
-    String tempKp     = request->getParam("tempKp")->value();
-    String tempKi     = request->getParam("tempKi")->value();
-    String tempKd     = request->getParam("tempKd")->value();
-    String humKp      = request->getParam("humKp")->value();
-    String humKi      = request->getParam("humKi")->value();
-    String humKd      = request->getParam("humKd")->value();
-    debugMessage("Received updatePidSettings request with tempKp: " + tempKp + " tempKi: " + tempKi + " tempKd: " + tempKd + " humKp: " + humKp + " humKi: " + humKi + " humKd: " + humKd);
+    String tempKp = request->getParam("tempKp")->value();
+    String tempKi = request->getParam("tempKi")->value();
+    String tempKd = request->getParam("tempKd")->value();
+    String humKp  = request->getParam("humKp")->value();
+    String humKi  = request->getParam("humKi")->value();
+    String humKd  = request->getParam("humKd")->value();
+    debugMessage("Received updatePidSettings request with tempKp: " + tempKp +
+                 " tempKi: " + tempKi + " tempKd: " + tempKd +
+                 " humKp: " + humKp + " humKi: " + humKi + " humKd: " + humKd);
     writeToFile("/tempKp.txt", String(tempKp), false);
     writeToFile("/tempKi.txt", String(tempKi), false);
     writeToFile("/tempKd.txt", String(tempKd), false);
