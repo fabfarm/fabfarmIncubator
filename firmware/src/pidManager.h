@@ -3,4 +3,4 @@
 
 void setupPidControllers();
 
-#endif //PIDFUNCTIONS_H
+#endif  // PIDFUNCTIONS_H

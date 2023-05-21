@@ -4,7 +4,8 @@
 void runIncubator();
 
 void controlHumidityVentServo(int currentHumidity, int targetHumidity);
-void controlHeatElementMosfet(float currentTemperature, float targetTemperature);
+void controlHeatElementMosfet(float currentTemperature,
+                              float targetTemperature);
 bool hasIntervalPassed(unsigned long intervalMillis);
 void pauseSystem();
 bool checkAndSetSensorValues();

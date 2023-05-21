@@ -3,6 +3,6 @@
 
 #include "config.h"
 
-void    debugMessage(String message);
+void debugMessage(String message);
 
 #endif

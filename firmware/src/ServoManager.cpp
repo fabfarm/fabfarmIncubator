@@ -1,6 +1,7 @@
 #include "ServoManager.h"
-#include "WebServerManager.h"
+
 #include "FileManager.h"
+#include "WebServerManager.h"
 #include "config.h"
 
 void connectServos() {
@@ -9,13 +10,13 @@ void connectServos() {
 }
 
 void controlTrayServo() {
-    static unsigned long lastTurnTime = 0;
-    static bool trayServoDirection = true;
+    static unsigned long lastTurnTime       = 0;
+    static bool          trayServoDirection = true;
 
     // Read the interval and angle from the SD card
     int trayServoTurnInterval, trayServoTurnAngle;
     trayServoTurnInterval = readFromFile("/trayServoInterval.txt").toFloat();
-    trayServoTurnAngle = readFromFile("/trayServoTurnAngle.txt").toFloat();
+    trayServoTurnAngle    = readFromFile("/trayServoTurnAngle.txt").toFloat();
 
     // If we have waited long enough...
     if (millis() - lastTurnTime >= trayServoTurnInterval) {
@@ -24,9 +25,9 @@ void controlTrayServo() {
         int trayServoNewPosition;
 
         if (trayServoDirection) {
-        trayServoNewPosition = currentServoPosition + trayServoTurnAngle;
+            trayServoNewPosition = currentServoPosition + trayServoTurnAngle;
         } else {
-        trayServoNewPosition = currentServoPosition - trayServoTurnAngle;
+            trayServoNewPosition = currentServoPosition - trayServoTurnAngle;
         }
         trayServo.write(trayServoNewPosition);
 

@@ -7,7 +7,6 @@
 #include "SensorManager.h"
 #include "config.h"
 
-
 // Function prototypes
 
 bool getIncubatorStatus();
