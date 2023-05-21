@@ -29,8 +29,12 @@ import TemperatureIcon from "./icons/TemperatureIcon";
 import React from "preact/compat";
 import {
   fetchDataWrapper,
+  useDebugMode,
+  useOpStatus,
   useTargetHumidity,
   useTargetTemperature,
+  useTurnAngle,
+  useTurnInterval,
 } from "../app";
 
 enum INCUBATION_OP_STATUS {
@@ -43,18 +47,18 @@ export default function SideNav({ closeDrawer }: { closeDrawer: () => void }) {
   const [targetTemperature, setTargetTemperature] = useTargetTemperature();
   const [targetHumidity, setTargetHumidity] = useTargetHumidity();
 
-  const [open, setOpen] = useState<number>(0);
-  const [servoTurnAngle, setServoTurnAngle] = useState<number>(45.0);
-  const [servoIntervalMs, setServoIntervalMs] = useState<number>(1000);
+  const [servoTurnAngle, setServoTurnAngle] = useTurnAngle();
+  const [servoIntervalMs, setServoIntervalMs] = useTurnInterval();
   const [pidTemperatureKp, setPidTemperatureKp] = useState<number>();
   const [pidTemperatureKi, setPidTemperatureKi] = useState<number>();
   const [pidTemperatureKd, setPidTemperatureKd] = useState<number>();
   const [pidRelHumidityKp, setPidRelHumidityKp] = useState<number>();
   const [pidRelHumidityKi, setPidRelHumidityKi] = useState<number>();
   const [pidRelHumidityKd, setPidRelHumidityKd] = useState<number>();
-  const [incubatorOperationStatus, _] = useState<INCUBATION_OP_STATUS>(
-    INCUBATION_OP_STATUS.UNKNOWN
-  );
+  const [incubatorOpStatus, setIncubatorOpStatus] = useOpStatus();
+  const [debugModeStatus, setDebugModeStatus] = useDebugMode();
+
+  const [open, setOpen] = useState<number>(0);
   const [isResetDataOpened, setIsResetDataOpened] = useState<boolean>(false);
 
   const handleOpen = (value: number) => {
@@ -322,12 +326,14 @@ export default function SideNav({ closeDrawer }: { closeDrawer: () => void }) {
           </ListItem>
           <AccordionBody className="py-1">
             <List className="flex">
-              <Button>Toggle Operation</Button>
+              <Button onClick={() => setIncubatorOpStatus(!incubatorOpStatus)}>
+                Toggle Operation
+              </Button>
               <div className="flex gap-4">
                 <Typography className="font-semibold">Status:</Typography>
                 <Chip
                   color="gray"
-                  value={incubatorOperationStatus}
+                  value={incubatorOpStatus ?? INCUBATION_OP_STATUS.UNKNOWN}
                   className="w-full"
                 />
               </div>
@@ -361,10 +367,16 @@ export default function SideNav({ closeDrawer }: { closeDrawer: () => void }) {
           </ListItem>
           <AccordionBody className="py-1">
             <List className="flex flex-col gap-4">
-              <Button>Toggle Debug Mode</Button>
+              <Button onClick={() => setDebugModeStatus(!debugModeStatus)}>
+                Toggle Debug Mode
+              </Button>
               <div className="flex gap-4">
                 <Typography className="font-semibold">Status:</Typography>
-                <Chip color="gray" value="Unknown" className="w-full" />
+                <Chip
+                  color="gray"
+                  value={debugModeStatus ?? "Unknown"}
+                  className="w-full"
+                />
               </div>
               <Button color="orange" onClick={handleToggleResetDataOpened}>
                 Reset Data

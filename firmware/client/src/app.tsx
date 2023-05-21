@@ -50,31 +50,37 @@ export const useCurrentHumidity = () =>
     refetchInterval: 2000,
   });
 
-export const useTargetTemperature = () => [
+const createStateTuple = (
+  getterEndpointName: string,
+  setterEndpointName: string
+) => [
   useQuery({
-    queryKey: ["getTargetTemperature"],
+    queryKey: [getterEndpointName],
     initialData: null,
-    queryFn: () => fetchDataWrapper("getTargetTemperature"),
+    queryFn: () => fetchDataWrapper(getterEndpointName),
   }).data,
   useMutation({
-    mutationKey: ["setTargetTemperature"],
-    mutationFn: (payload) => fetchDataWrapper("setTargetTemperature", payload),
-    onMutate: (e) => console.log("Temperature mutation:", e),
+    mutationKey: [setterEndpointName],
+    mutationFn: (payload) => fetchDataWrapper(setterEndpointName, payload),
+    onMutate: (e) => console.log(setterEndpointName + " mutation:", e),
   }).mutate,
 ];
 
-export const useTargetHumidity = () => [
-  useQuery({
-    queryKey: ["getTargetHumidity"],
-    initialData: null,
-    queryFn: () => fetchDataWrapper("getTargetHumidity"),
-  }).data,
-  useMutation({
-    mutationKey: ["setTargetHumidity"],
-    mutationFn: (payload) => fetchDataWrapper("setTargetHumidity", payload),
-    onMutate: (e) => console.log("Humidity mutation:", e),
-  }).mutate,
-];
+export const useTargetTemperature = () =>
+  createStateTuple("getTargetTemperature", "setTargetTemperature");
+
+export const useTargetHumidity = () =>
+  createStateTuple("getTargetHumidity", "setTargetHumidity");
+
+export const useTurnInterval = () =>
+  createStateTuple("getInterval", "setInterval");
+export const useTurnAngle = () => createStateTuple("getAngle", "setAngle");
+export const useDebugMode = () =>
+  createStateTuple("getDebugMode", "toggleDebugMode");
+export const useOpStatus = () =>
+  createStateTuple("getIncubatorStatus", "toggleIncubatorStatus");
+export const usePID = () =>
+  createStateTuple("getCurrentPidSettings", "updatePidSettings");
 
 export function App() {
   let response = usePrefetchData().data;
