@@ -68,6 +68,7 @@ String restructureDataToJson(const std::vector<DataPoint> &temperatureData,
     }
 
     String output;
+    // TODO: No output here, why can't the csv files be opened?
     serializeJson(doc, output);
     return output;
 }
@@ -172,7 +173,7 @@ void handleIncubatorStatusToggle(AsyncWebServerRequest *request) {
 void handleIncubatorStatusRequest(AsyncWebServerRequest *request) {
     bool   currentStatus = getIncubatorStatus();
     String jsonResponse =
-        "{\"status\": " + String(currentStatus ? "false" : "true") + "}";
+        "{\"status\": " + String(currentStatus ? "true" : "false") + "}";
     request->send(200, "application/json", jsonResponse);
 }
 
@@ -190,7 +191,6 @@ void handleDataFetchRequest(AsyncWebServerRequest *request) {
     // File paths for temperature and humidity CSV files
     String temperatureFileName = "/data_temp.csv";
     String humidityFileName    = "/data_hum.csv";
-
     if (SPIFFS.exists(temperatureFileName) && SPIFFS.exists(humidityFileName)) {
         request->send(
             200, "application/json",
@@ -226,32 +226,33 @@ void handleResetDataRequest(AsyncWebServerRequest *request) {
 
 void initializeWebServer() {
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
-    DefaultHeaders::Instance().addHeader("Access-Control-Allow-Methods",
-                                         "GET, POST, PUT, DELETE, OPTIONS");
+    DefaultHeaders::Instance().addHeader(
+        "Access-Control-Allow-Methods",
+        "GET, POST, PATCH, PUT, DELETE, OPTIONS");
     server.serveStatic("/assets/", SPIFFS, "/assets/");
     server.on("/", HTTP_GET, handleRootRequest);
-    server.on("/setTargetTemperature", HTTP_GET,
+    server.on("/setTargetTemperature", HTTP_POST,
               handleTemperatureSettingsUpdate);
     server.on("/getTargetTemperature", HTTP_GET,
               handleTemperatureSettingsRequest);
     server.on("/getCurrentTemperature", HTTP_GET, handleGetCurrentTemperature);
-    server.on("/setTargetHumidity", HTTP_GET, handleHumiditySettingsUpdate);
+    server.on("/setTargetHumidity", HTTP_POST, handleHumiditySettingsUpdate);
     server.on("/getTargetHumidity", HTTP_GET, handleHumiditySettingsRequest);
     server.on("/getCurrentHumidity", HTTP_GET, handleGetCurrentHumidity);
-    server.on("/setAngle", HTTP_GET, handleServoAngleUpdate);
+    server.on("/setAngle", HTTP_POST, handleServoAngleUpdate);
     server.on("/getAngle", HTTP_GET, handleServoAngleRequest);
-    server.on("/setInterval", HTTP_GET, handleServoIntervalUpdate);
+    server.on("/setInterval", HTTP_POST, handleServoIntervalUpdate);
     server.on("/getInterval", HTTP_GET, handleServoIntervalRequest);
 
-    server.on("/toggleIncubator", HTTP_GET, handleIncubatorStatusToggle);
-    server.on("/toggleDebugMode", HTTP_GET, handleDebugModeToggle);
+    server.on("/toggleIncubator", HTTP_POST, handleIncubatorStatusToggle);
+    server.on("/toggleDebugMode", HTTP_POST, handleDebugModeToggle);
     server.on("/getDebugMode", HTTP_GET, handleDebugModeRequest);
 
     server.on("/fetchData", HTTP_GET, handleDataFetchRequest);
-    server.on("/resetData", HTTP_GET, handleResetDataRequest);
+    server.on("/resetData", HTTP_POST, handleResetDataRequest);
     server.on("/getCurrentPidSettings", HTTP_GET,
               handleCurrentPidSettingsRequest);
-    server.on("/updatePidSettings", HTTP_GET, handlePidSettingsUpdate);
+    server.on("/updatePidSettings", HTTP_POST, handlePidSettingsUpdate);
 
     // for ./assets/barebone.html
     server.on("/getIncubatorStatus", HTTP_GET, handleIncubatorStatusRequest);
