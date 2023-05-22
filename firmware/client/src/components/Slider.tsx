@@ -28,14 +28,14 @@ export default function SliderControl({
       <h5 className="flex justify-center font-semibold">
         {label}
         {label && ": "}
-        {value ? value.toFixed(1) : "N/A"}
+        {value ?? "N/A"}
         {unit}
       </h5>
       <Slider
         max={max}
         min={min}
         step="0.1"
-        value={value ?? "N/A"}
+        defaultValue={value ?? "N/A"}
         onChange={debouncer}
         size="sm"
       />

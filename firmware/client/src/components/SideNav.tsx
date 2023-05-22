@@ -22,11 +22,8 @@ import {
   SwatchIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { useEffect, useState } from "preact/hooks";
-import SliderControl from "./Slider";
-import DropletIcon from "./icons/DropletIcon";
-import TemperatureIcon from "./icons/TemperatureIcon";
 import React from "preact/compat";
+import { useState } from "preact/hooks";
 import {
   fetchDataWrapper,
   useDebugMode,
@@ -36,6 +33,9 @@ import {
   useTurnAngle,
   useTurnInterval,
 } from "../app";
+import SliderControl from "./Slider";
+import DropletIcon from "./icons/DropletIcon";
+import TemperatureIcon from "./icons/TemperatureIcon";
 
 enum INCUBATION_OP_STATUS {
   UNKNOWN = "Unknown",
@@ -184,16 +184,15 @@ export default function SideNav({ closeDrawer }: { closeDrawer: () => void }) {
                 max={360}
                 label="Servo turn angle"
                 unit="°"
-                value={servoTurnAngle}
+                value={servoTurnAngle?.angle}
                 setValue={setServoTurnAngle}
               ></SliderControl>
               <Input
-                inputProps={{
-                  type: "number",
-                  value: servoIntervalMs,
-                  onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
-                    setServoIntervalMs(parseInt(e.currentTarget.value)),
-                }}
+                type="number"
+                default={servoIntervalMs?.interval}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setServoIntervalMs(parseInt(e.currentTarget.value))
+                }
                 label="Servo turn interval: (ms)"
                 variant="outlined"
               />
@@ -228,68 +227,67 @@ export default function SideNav({ closeDrawer }: { closeDrawer: () => void }) {
           <AccordionBody className="py-1">
             <List className="p-0">
               <Input
-                inputProps={{
-                  type: "number",
-                  step: 0.01,
-                  value: { pidTemperatureKp },
-                  onChange: (event: React.ChangeEvent<HTMLInputElement>) =>
-                    setPidTemperatureKp(Number(event.currentTarget.value)),
-                }}
+                type="number"
+                step={0.01}
+                defaultValue={pidTemperatureKp}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                  setPidTemperatureKp(Number(event.currentTarget.value))
+                }
                 label="Temperature Kp:"
                 variant="outlined"
               />
+
               <Input
-                inputProps={{
-                  type: "number",
-                  step: 0.01,
-                  value: { pidTemperatureKi },
-                  onChange: (event: React.ChangeEvent<HTMLInputElement>) =>
-                    setPidTemperatureKi(Number(event.currentTarget.value)),
-                }}
+                type="number"
+                step={0.01}
+                value={pidTemperatureKi}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                  setPidTemperatureKi(Number(event.currentTarget.value))
+                }
                 label="Temperature Ki:"
                 variant="outlined"
               />
+
               <Input
-                inputProps={{
-                  type: "number",
-                  step: 0.01,
-                  value: { pidTemperatureKd },
-                  onChange: (event: React.ChangeEvent<HTMLInputElement>) =>
-                    setPidTemperatureKd(Number(event.currentTarget.value)),
-                }}
+                type="number"
+                step={0.01}
+                value={pidTemperatureKd}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                  setPidTemperatureKd(Number(event.currentTarget.value))
+                }
                 label="Temperature Kd:"
                 variant="outlined"
               />
+
               <Input
-                inputProps={{
-                  type: "number",
-                  step: 0.01,
-                  value: { pidRelHumidityKp },
-                  onChange: (event: React.ChangeEvent<HTMLInputElement>) =>
-                    setPidRelHumidityKp(Number(event.currentTarget.value)),
-                }}
+                type="number"
+                step={0.01}
+                value={pidRelHumidityKp}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                  setPidRelHumidityKp(Number(event.currentTarget.value))
+                }
                 label="Rel. Humidity Kp:"
                 variant="outlined"
               />
+
               <Input
-                inputProps={{
-                  type: "number",
-                  step: 0.01,
-                  value: { pidRelHumidityKi },
-                  onChange: (event: React.ChangeEvent<HTMLInputElement>) =>
-                    setPidRelHumidityKi(Number(event.currentTarget.value)),
-                }}
+                type="number"
+                step={0.01}
+                value={pidRelHumidityKi}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                  setPidRelHumidityKi(Number(event.currentTarget.value))
+                }
                 label="Rel. Humidity Ki:"
                 variant="outlined"
               />
+
               <Input
-                inputProps={{
-                  type: "number",
-                  step: 0.01,
-                  value: { pidRelHumidityKd },
-                  onChange: (event: React.ChangeEvent<HTMLInputElement>) =>
-                    setPidRelHumidityKd(Number(event.currentTarget.value)),
-                }}
+                type="number"
+                step={0.01}
+                value={pidRelHumidityKd}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                  setPidRelHumidityKd(Number(event.currentTarget.value))
+                }
                 label="Rel. Humidity Kd:"
                 variant="outlined"
               />
@@ -333,7 +331,13 @@ export default function SideNav({ closeDrawer }: { closeDrawer: () => void }) {
                 <Typography className="font-semibold">Status:</Typography>
                 <Chip
                   color="gray"
-                  value={incubatorOpStatus ?? INCUBATION_OP_STATUS.UNKNOWN}
+                  value={
+                    typeof incubatorOpStatus?.status === "boolean"
+                      ? incubatorOpStatus.status
+                        ? INCUBATION_OP_STATUS.ON
+                        : INCUBATION_OP_STATUS.OFF
+                      : INCUBATION_OP_STATUS.UNKNOWN
+                  }
                   className="w-full"
                 />
               </div>
@@ -374,7 +378,7 @@ export default function SideNav({ closeDrawer }: { closeDrawer: () => void }) {
                 <Typography className="font-semibold">Status:</Typography>
                 <Chip
                   color="gray"
-                  value={debugModeStatus ?? "Unknown"}
+                  value={debugModeStatus?.debugMode ?? "Unknown"}
                   className="w-full"
                 />
               </div>

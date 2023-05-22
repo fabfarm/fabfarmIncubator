@@ -1,8 +1,6 @@
-
 *.b#*
 *.s#*
 *.job
 *.pro
 firmware/.vscode/*
-firmware/client/*
 *.l#1

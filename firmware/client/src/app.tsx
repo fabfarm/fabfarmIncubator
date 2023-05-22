@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "preact/compat";
-import { useMutation, useQuery } from "react-query";
+import { useQuery } from "react-query";
 import "./app.css";
 import StatisticsCard from "./components/StatisticsCard";
 import StatisticsChart from "./components/StatisticsChart";
@@ -7,7 +7,7 @@ import DropletIcon from "./components/icons/DropletIcon";
 import TemperatureIcon from "./components/icons/TemperatureIcon";
 import dailyHumidityChart from "./configs/humidity-config";
 import dailyTemperatureChart from "./configs/temperature-config";
-import { prefetchData } from "./main";
+import { createStateTuple, prefetchData } from "./main";
 
 type DataPoint = {
   x: number;
@@ -50,22 +50,6 @@ export const useCurrentHumidity = () =>
     refetchInterval: 2000,
   });
 
-const createStateTuple = (
-  getterEndpointName: string,
-  setterEndpointName: string
-) => [
-  useQuery({
-    queryKey: [getterEndpointName],
-    initialData: null,
-    queryFn: () => fetchDataWrapper(getterEndpointName),
-  }).data,
-  useMutation({
-    mutationKey: [setterEndpointName],
-    mutationFn: (payload) => fetchDataWrapper(setterEndpointName, payload),
-    onMutate: (e) => console.log(setterEndpointName + " mutation:", e),
-  }).mutate,
-];
-
 export const useTargetTemperature = () =>
   createStateTuple("getTargetTemperature", "setTargetTemperature");
 
@@ -78,7 +62,7 @@ export const useTurnAngle = () => createStateTuple("getAngle", "setAngle");
 export const useDebugMode = () =>
   createStateTuple("getDebugMode", "toggleDebugMode");
 export const useOpStatus = () =>
-  createStateTuple("getIncubatorStatus", "toggleIncubatorStatus");
+  createStateTuple("getIncubatorStatus", "toggleIncubator");
 export const usePID = () =>
   createStateTuple("getCurrentPidSettings", "updatePidSettings");
 
