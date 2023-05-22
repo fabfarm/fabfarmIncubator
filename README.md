@@ -44,6 +44,31 @@ This is the code repository for the Fabfarm Egg Incubator, a project for control
 8. Configure temperature, humidity, and servo settings using the web interface.
 9. Monitor the incubator data on the web interface and TFT screen.
 
+### React frontend
+
+#### General Setup:
+
+0. you must have node, npm or a comparable package manager installed. (node >18)
+1. path to the `./firmware/client` folder
+2. run `npm install` to locally install your dependencies for the project
+3. add a `.env` file by copying the .env.example file and replacing the values with the IP produced by the chip when it is setting up. (This will most likely be a dynamic IP so it is important to check if this has changed with every setup.)
+
+#### Developing
+
+The react frontend lives as its own project in the `./firmware/client` folder.
+
+We can host the development server
+
+#### Building
+
+In order to build the react frontend files you must have node and npm or a comparable package manager installed.
+
+The frontend files are built, compressed and placed in the ESP32 filesystem.
+
+To do this, path to `./firmware/client` and run `npm run build`.
+
+After this you can flash the chip and it'll have the latest version of the frontend available to you.
+
 ## Functionality Overview
 
 - The incubator monitors and controls temperature and humidity using a BME280 sensor and a relay and servo motor, respectively.
@@ -63,3 +88,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 ## Acknowledgements
 
 This project was written by Lucio.
+The react frontend was built by @NoHara42
