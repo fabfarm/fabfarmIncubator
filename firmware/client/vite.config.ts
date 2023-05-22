@@ -6,6 +6,10 @@ import viteCompression from "vite-plugin-compression";
 export default defineConfig({
   plugins: [
     preact(),
-    viteCompression({ verbose: true, deleteOriginFile: true }),
+    viteCompression({
+      verbose: true,
+      deleteOriginFile: true,
+      filter: /.*\/index-.*\..*$/,
+    }),
   ],
 });
