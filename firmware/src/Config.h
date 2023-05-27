@@ -25,9 +25,7 @@
 #define TRIGGER_PIN 0
 
 extern bool      debugMode;
-extern int       currentHumidity;
 extern float     currentPressure;
-extern float     currentTemperature;
 extern float     targetTemperature;
 extern int       targetHumidity;
 extern float     trayServoTurnInterval;
