@@ -11,11 +11,13 @@
 #include <ESPAsyncWebServer.h>
 #include <FS.h>
 #include <PID_v1.h>
-#include <SPI.h>
 #include <SPIFFS.h>
 #include <TFT_eSPI.h>
+#include <SPI.h>
 #include <Wire.h>
 #include <math.h>
+
+extern TFT_eSPI tft;
 
 #define BME_SDA BMESdaPin
 #define BME_SCL BMESclPin
@@ -30,6 +32,9 @@ extern float     targetTemperature;
 extern int       targetHumidity;
 extern float     trayServoTurnInterval;
 extern float     trayServoTurnAngle;
+
+// timeIntervalToSaveData
+extern unsigned long timeIntervalToSaveData;
 
 extern const int mosfetPin;
 extern const int humidityVentServoPin;

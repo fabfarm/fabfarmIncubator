@@ -1,11 +1,16 @@
 #include "Config.h"
 
+TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
+
 bool  debugMode             = true;
 float currentPressure       = 0.0;
 float targetTemperature     = 0.0;
 int   targetHumidity        = 0;
 float trayServoTurnInterval = 0;
 float trayServoTurnAngle    = 0;
+
+// timeIntervalToSaveData
+unsigned long timeIntervalToSaveData = 20000;
 
 const int mosfetPin            = 16;
 const int humidityVentServoPin = 37;

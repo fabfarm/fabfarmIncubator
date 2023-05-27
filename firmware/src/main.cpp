@@ -12,11 +12,11 @@
 #include "RunIncubator.h"
 
 void setup() {
+    initializeTFTDisplay();
     wifiManagerSetup();
     Serial.begin(115200);
     pinMode(mosfetPin, OUTPUT);
     setupPidControllers();
-    // initializeTFTDisplay();
     initializeStorage();
     connectServos();
     loadSettings();
@@ -26,6 +26,7 @@ void setup() {
 }
 
 void loop() {
+    // tft.fillScreen(TFT_WHITE);
     wifiManagerLoop();
     runIncubator();
 }
