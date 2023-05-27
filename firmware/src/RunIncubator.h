@@ -18,5 +18,6 @@ void controlHeatElementMosfet(float currentTemperature,
 bool hasIntervalPassed(unsigned long intervalMillis);
 void pauseSystem();
 void saveData();
+bool getIncubatorStatus();
 
 #endif

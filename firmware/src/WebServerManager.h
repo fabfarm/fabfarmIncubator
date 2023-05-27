@@ -6,8 +6,8 @@
 #include "DebugManager.h"
 #include "DisplayManager.h"
 #include "FileManager.h"
+#include "RunIncubator.h"
 
-bool getIncubatorStatus();
 void loadSettings();
 void initializeWebServer();
 void handleRootRequest(AsyncWebServerRequest *request);

@@ -26,12 +26,10 @@ void pauseSystem() {
 }
 
 void saveData() {
-    writeToFile("/dataTemp.csv",
-                String(millis()) + "," + String(currentTemperature) + "\n",
+    writeToFile("/data.txt",
+                String(millis()) + "," + String(currentTemperature) + "," +
+                    String(currentHumidity) + "   ",
                 true);
-    writeToFile("/dataHum.csv",
-                String(millis()) + "," + String(currentHumidity) + "\n", true);
-    debugMessage("Data saved to SPIFFS");
 }
 
 void controlHeatElementMosfet(float currentTemperature,
@@ -62,4 +60,8 @@ bool hasIntervalPassed(unsigned long intervalMillis) {
     } else {
         return false;
     }
+}
+
+bool getIncubatorStatus() {
+    return readFromFile("/setStatus.txt").toInt() == 1;
 }
