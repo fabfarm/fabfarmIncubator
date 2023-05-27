@@ -75,9 +75,6 @@ void handleRootRequest(AsyncWebServerRequest *request) {
 void handleIncubatorStatusToggle(AsyncWebServerRequest *request) {
     bool currentStatus = getIncubatorStatus();
     writeToFile("/setStatus.txt", currentStatus ? "0" : "1", false);
-    debugMessage("Incubator status file contents" +
-                 readFromFile("/setStatus.txt"));
-
     String jsonResponse =
         "{\"status\": " + String(currentStatus ? "false" : "true") + "}";
     debugMessage("Toggled incubator status to:" +
