@@ -7,7 +7,7 @@ struct DataPoint {
 std::vector<DataPoint> extractDataFromCSV(const String &filename) {
     std::vector<DataPoint> dataPoints;
 
-    fs::File file = readFile(filename.c_str());
+    fs::File file = openFileForReading(filename.c_str());
     if (!file) {
         Serial.println("Failed to open file: " + filename);
         return dataPoints;
@@ -115,6 +115,8 @@ void handleServoIntervalRequest(AsyncWebServerRequest *request) {
     String json = "{\"interval\":" + String(trayServoTurnInterval) + "}";
     request->send(200, "application/json", json);
 }
+
+#include <ArduinoJson.h>
 
 void handleRootRequest(AsyncWebServerRequest *request) {
     loadSettings();

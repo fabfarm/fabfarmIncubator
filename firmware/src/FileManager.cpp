@@ -30,12 +30,11 @@ String readFromFile(const char *fileName) {
     return content;
 }
 
-fs::File readFile(const char *fileName) {
+fs::File openFileForReading(const char *fileName) {
     if (!SPIFFS.exists(fileName)) {
         debugMessage(String("Error opening ") + fileName + " for reading");
         return fs::File();
     }
     fs::File file = SPIFFS.open(fileName, "r");
-    file.close();
     return file;
 }

@@ -14,6 +14,5 @@ void writeToFile(const char *fileName, const String &content,
                  bool append = true);
 
 String   readFromFile(const char *fileName);
-fs::File readFile(const char *fileName);
-
+fs::File openFileForReading(const char *fileName);
 #endif
