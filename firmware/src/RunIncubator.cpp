@@ -1,11 +1,16 @@
 #include "RunIncubator.h"
 
 void runIncubator() {
-    bool isIncubatorActive = getIncubatorStatus();
-    debugMessage("Incubator is: " +
-                 String(isIncubatorActive ? "active" : "not active"));
+    static bool previousIncubatorStatus = false;
+    bool currentIncubatorStatus = getIncubatorStatus();
 
-    if (!isIncubatorActive) {
+    if (currentIncubatorStatus != previousIncubatorStatus) {
+        debugMessage("Incubator status has changed: " +
+                     String(currentIncubatorStatus ? "active" : "not active"));
+        previousIncubatorStatus = currentIncubatorStatus;
+    }
+
+    if (!currentIncubatorStatus) {
         pauseSystem();
         return;
     }
@@ -18,6 +23,8 @@ void runIncubator() {
     controlHumidityVentServo(targetHumidity);
     controlTrayServo();
 }
+
+
 
 void pauseSystem() {
     digitalWrite(mosfetPin, OFF);
@@ -37,7 +44,7 @@ void controlHeatElementMosfet(float targetTemperature) {
     tempSetpoint = targetTemperature;
     tempPID.Compute();
     digitalWrite(mosfetPin, tempOutput > 0.5 ? ON : OFF);
-    debugMessage("Heat Element Mosfet controlled");
+    //debugMessage("Heat Element Mosfet controlled");
 }
 
 void controlHumidityVentServo(int targetHumidity) {
@@ -46,7 +53,7 @@ void controlHumidityVentServo(int targetHumidity) {
     humPID.Compute();
     int servoPosition = servoClosedPosition - humOutput;
     ventServo.write(servoPosition);
-    debugMessage("Humidity Vent Servo controlled");
+    //debugMessage("Humidity Vent Servo controlled");
 }
 
 bool hasIntervalPassed(unsigned long intervalMillis) {
