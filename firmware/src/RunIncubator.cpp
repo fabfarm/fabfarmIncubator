@@ -14,8 +14,8 @@ void runIncubator() {
         saveData();
     }
 
-    controlHeatElementMosfet(currentTemperature, targetTemperature);
-    controlHumidityVentServo(currentHumidity, targetHumidity);
+    controlHeatElementMosfet(targetTemperature);
+    controlHumidityVentServo(targetHumidity);
     controlTrayServo();
 }
 
@@ -27,22 +27,21 @@ void pauseSystem() {
 
 void saveData() {
     writeToFile("/data.txt",
-                String(millis()) + "," + String(currentTemperature) + "," +
-                    String(currentHumidity) + "   ",
+                String(millis()) + "," + String(bme.readTemperature()) + "," +
+                    String(bme.readHumidity()) + "   ",
                 true);
 }
 
-void controlHeatElementMosfet(float currentTemperature,
-                              float targetTemperature) {
-    tempInput    = currentTemperature;
+void controlHeatElementMosfet(float targetTemperature) {
+    tempInput    = bme.readTemperature();
     tempSetpoint = targetTemperature;
     tempPID.Compute();
     digitalWrite(mosfetPin, tempOutput > 0.5 ? ON : OFF);
     debugMessage("Heat Element Mosfet controlled");
 }
 
-void controlHumidityVentServo(int currentHumidity, int targetHumidity) {
-    humInput    = currentHumidity;
+void controlHumidityVentServo(int targetHumidity) {
+    humInput    = bme.readHumidity();
     humSetpoint = targetHumidity;
     humPID.Compute();
     int servoPosition = servoClosedPosition - humOutput;
