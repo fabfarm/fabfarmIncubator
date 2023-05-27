@@ -10,13 +10,13 @@ void runIncubator() {
         previousIncubatorStatus = currentIncubatorStatus;
     }
 
+    if (hasIntervalPassed(timeIntervalToSaveData)) {
+        saveData();
+    }
+
     if (!currentIncubatorStatus) {
         pauseSystem();
         return;
-    }
-
-    if (hasIntervalPassed(5000)) {
-        saveData();
     }
 
     controlHeatElementMosfet(targetTemperature);
