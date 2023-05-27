@@ -1,7 +1,7 @@
 #ifndef PIDMANAGER_H
 #define PIDMANAGER_H
 
-#include "config.h"
+#include "Config.h"
 
 void setupPidControllers();
 

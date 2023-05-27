@@ -1,4 +1,4 @@
-#include "runIncubator.h"
+#include "RunIncubator.h"
 
 void runIncubator() {
     bool isIncubatorActive = getIncubatorStatus();
@@ -10,10 +10,6 @@ void runIncubator() {
         return;
     }
 
-    if (!checkAndSetSensorValues()) {
-        return;
-    }
-
     if (hasIntervalPassed(5000)) {
         saveData();
     }
@@ -21,7 +17,6 @@ void runIncubator() {
     controlHeatElementMosfet(currentTemperature, targetTemperature);
     controlHumidityVentServo(currentHumidity, targetHumidity);
     controlTrayServo();
-    // updateTFTDisplay();
 }
 
 void pauseSystem() {
@@ -30,31 +25,11 @@ void pauseSystem() {
     debugMessage("System is Paused");
 }
 
-bool checkAndSetSensorValues() {
-    currentTemperature = bme.readTemperature();
-    currentHumidity    = bme.readHumidity();
-    currentPressure    = bme.readPressure() / 100.0F;
-
-    if (isnan(currentHumidity) || isnan(currentTemperature)) {
-        debugMessage("Failed to read from sensor!");
-        return false;
-    }
-
-    if (currentTemperature < minTemperature ||
-        currentTemperature > maxTemperature || currentHumidity < minHumidity ||
-        currentHumidity > maxHumidity) {
-        debugMessage("Sensor values out of range!");
-        return false;
-    }
-    debugMessage("Sensor values set");
-    return true;
-}
-
 void saveData() {
-    writeToFile("/data_temp.csv",
+    writeToFile("/dataTemp.csv",
                 String(millis()) + "," + String(currentTemperature) + "\n",
                 true);
-    writeToFile("/data_hum.csv",
+    writeToFile("/dataHum.csv",
                 String(millis()) + "," + String(currentHumidity) + "\n", true);
     debugMessage("Data saved to SPIFFS");
 }

@@ -4,11 +4,11 @@
 #include <Arduino.h>
 #include <WifiManagerHelper.h>
 
-#include "config.h"
+#include "Config.h"
 
 #include "DebugManager.h"
 #include "WebServerManager.h"
-#include "runIncubator.h"
+#include "RunIncubator.h"
 
 void wifiManagerSetup();
 

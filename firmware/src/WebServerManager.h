@@ -1,7 +1,7 @@
 #ifndef WEB_SERVER_MANAGER_H
 #define WEB_SERVER_MANAGER_H
 
-#include "config.h"
+#include "Config.h"
 
 #include "DebugManager.h"
 #include "DisplayManager.h"

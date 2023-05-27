@@ -1,7 +1,7 @@
 #ifndef RUN_INCUBATOR_h
 #define RUN_INCUBATOR_h
 
-#include "config.h"
+#include "Config.h"
 
 #include "DebugManager.h"
 #include "DisplayManager.h"
@@ -17,7 +17,6 @@ void controlHeatElementMosfet(float currentTemperature,
                               float targetTemperature);
 bool hasIntervalPassed(unsigned long intervalMillis);
 void pauseSystem();
-bool checkAndSetSensorValues();
 void saveData();
 
 #endif

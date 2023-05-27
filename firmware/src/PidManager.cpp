@@ -1,4 +1,4 @@
-#include "pidManager.h"
+#include "PidManager.h"
 
 void setupPidControllers() {
     tempPID.SetMode(AUTOMATIC);

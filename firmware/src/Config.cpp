@@ -1,4 +1,4 @@
-#include "config.h"
+#include "Config.h"
 
 bool  debugMode             = true;
 int   currentHumidity       = 0;
@@ -8,12 +8,6 @@ float targetTemperature     = 0.0;
 int   targetHumidity        = 0;
 float trayServoTurnInterval = 0;
 float trayServoTurnAngle    = 0;
-
-// Temperature in Celsius
-float minTemperature = 0.0;
-float maxTemperature = 100.0;
-float minHumidity    = 0.0;
-float maxHumidity    = 100.0;
 
 const int mosfetPin            = 16;
 const int humidityVentServoPin = 37;

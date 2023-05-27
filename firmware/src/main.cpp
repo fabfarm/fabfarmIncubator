@@ -7,9 +7,9 @@
 #include "ServoManager.h"
 #include "WebServerManager.h"
 #include "WifiManagerHelper.h"
-#include "config.h"
-#include "pidManager.h"
-#include "runIncubator.h"
+#include "Config.h"
+#include "PidManager.h"
+#include "RunIncubator.h"
 
 void setup() {
     wifiManagerSetup();

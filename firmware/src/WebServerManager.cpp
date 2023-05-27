@@ -73,8 +73,8 @@ String restructureDataToJson(const std::vector<DataPoint> &temperatureData,
 }
 
 void loadSettings() {
-    targetTemperature     = readFromFile("/set_temp.txt").toFloat();
-    targetHumidity        = readFromFile("/set_hum.txt").toInt();
+    targetTemperature     = readFromFile("/setTemp.txt").toFloat();
+    targetHumidity        = readFromFile("/setHum.txt").toInt();
     trayServoTurnAngle    = readFromFile("/trayServoTurnAngle.txt").toFloat();
     trayServoTurnInterval = readFromFile("/trayServoInterval.txt").toFloat();
     tempKp                = readFromFile("/tempKp.txt").toFloat();
@@ -87,7 +87,7 @@ void loadSettings() {
 }
 
 bool getIncubatorStatus() {
-    return readFromFile("/set_status.txt").toInt() == 1;
+    return readFromFile("/setStatus.txt").toInt() == 1;
 }
 
 void handleServoAngleUpdate(AsyncWebServerRequest *request) {
@@ -133,7 +133,7 @@ void handleTemperatureSettingsUpdate(AsyncWebServerRequest *request) {
     String temp       = request->getParam("temp")->value();
     targetTemperature = temp.toFloat();
     debugMessage("Received updateSettings request with temp: " + temp);
-    writeToFile("/set_temp.txt", String(targetTemperature), false);
+    writeToFile("/setTemp.txt", String(targetTemperature), false);
     request->send(200, "text/plain", "OK");
 }
 
@@ -147,7 +147,7 @@ void handleHumiditySettingsUpdate(AsyncWebServerRequest *request) {
     String hum     = request->getParam("hum")->value();
     targetHumidity = hum.toInt();
     debugMessage("Received request with hum: " + hum);
-    writeToFile("/set_hum.txt", String(targetHumidity), false);
+    writeToFile("/setHum.txt", String(targetHumidity), false);
     request->send(200, "text/plain", "OK");
 }
 
@@ -158,9 +158,9 @@ void handleHumiditySettingsRequest(AsyncWebServerRequest *request) {
 
 void handleIncubatorStatusToggle(AsyncWebServerRequest *request) {
     bool currentStatus = getIncubatorStatus();
-    writeToFile("/set_status.txt", currentStatus ? "0" : "1", false);
+    writeToFile("/setStatus.txt", currentStatus ? "0" : "1", false);
     debugMessage("Incubator status file contents" +
-                 readFromFile("/set_status.txt"));
+                 readFromFile("/setStatus.txt"));
 
     String jsonResponse =
         "{\"status\": " + String(currentStatus ? "false" : "true") + "}";
@@ -188,8 +188,8 @@ void handleDebugModeRequest(AsyncWebServerRequest *request) {
 
 void handleDataFetchRequest(AsyncWebServerRequest *request) {
     // File paths for temperature and humidity CSV files
-    String temperatureFileName = "/data_temp.csv";
-    String humidityFileName    = "/data_hum.csv";
+    String temperatureFileName = "/dataTemp.csv";
+    String humidityFileName    = "/dataHum.csv";
 
     if (SPIFFS.exists(temperatureFileName) && SPIFFS.exists(humidityFileName)) {
         request->send(
@@ -214,9 +214,9 @@ void handleGetCurrentHumidity(AsyncWebServerRequest *request) {
 }
 
 void handleResetDataRequest(AsyncWebServerRequest *request) {
-    if (SPIFFS.exists("/data_temp.csv") && SPIFFS.exists("/data_hum.csv")) {
-        writeToFile("/data_temp.csv", "", false);
-        writeToFile("/data_hum.csv", "", false);
+    if (SPIFFS.exists("/dataTemp.csv") && SPIFFS.exists("/dataHum.csv")) {
+        writeToFile("/dataTemp.csv", "", false);
+        writeToFile("/dataHum.csv", "", false);
         debugMessage("DATA RESET");
         request->send(200, "text/plain", "Data was reset.");
     } else {
@@ -292,8 +292,8 @@ void handleTemperatureHumiditySettingsUpdate(AsyncWebServerRequest *request) {
     targetHumidity    = hum.toInt();
     debugMessage("Received updateSettings request with temp: " + temp +
                  " and hum: " + hum);
-    writeToFile("/set_temp.txt", String(targetTemperature), false);
-    writeToFile("/set_hum.txt", String(targetHumidity), false);
+    writeToFile("/setTemp.txt", String(targetTemperature), false);
+    writeToFile("/setHum.txt", String(targetHumidity), false);
     request->send(200, "text/plain", "OK");
 }
 void handleSensorDataRequest(AsyncWebServerRequest *request) {

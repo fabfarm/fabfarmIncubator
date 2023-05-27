@@ -1,7 +1,7 @@
 #ifndef SENSOR_MANAGER_H
 #define SENSOR_MANAGER_H
 
-#include "config.h"
+#include "Config.h"
 
 #include "DebugManager.h"
 

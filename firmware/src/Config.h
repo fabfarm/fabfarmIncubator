@@ -17,9 +17,6 @@
 #include <Wire.h>
 #include <math.h>
 
-
-// #include "NotoSansBold15.h"
-
 #define BME_SDA BMESdaPin
 #define BME_SCL BMESclPin
 #define ON LOW
@@ -35,10 +32,6 @@ extern float     targetTemperature;
 extern int       targetHumidity;
 extern float     trayServoTurnInterval;
 extern float     trayServoTurnAngle;
-extern float     minTemperature;
-extern float     maxTemperature;
-extern float     minHumidity;
-extern float     maxHumidity;
 
 extern const int mosfetPin;
 extern const int humidityVentServoPin;
