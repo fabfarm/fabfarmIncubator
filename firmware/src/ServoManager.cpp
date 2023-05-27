@@ -1,9 +1,5 @@
 #include "ServoManager.h"
 
-#include "FileManager.h"
-#include "WebServerManager.h"
-#include "config.h"
-
 void connectServos() {
     ventServo.attach(humidityVentServoPin);
     trayServo.attach(trayServoPin);

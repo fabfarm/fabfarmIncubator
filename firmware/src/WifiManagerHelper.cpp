@@ -1,10 +1,5 @@
 #include "WifiManagerHelper.h"
 
-#include "DebugManager.h"
-#include "WebServerManager.h"
-#include "config.h"
-#include "runIncubator.h"
-
 void wifiManagerSetup() {
     WiFi.mode(WIFI_STA);          // explicitly set mode, esp defaults to STA+AP
     Serial.setDebugOutput(true);  //

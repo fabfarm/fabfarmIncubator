@@ -1,13 +1,5 @@
 #include "runIncubator.h"
 
-#include "DebugManager.h"
-#include "DisplayManager.h"
-#include "FileManager.h"
-#include "SensorManager.h"
-#include "ServoManager.h"
-#include "WebServerManager.h"
-#include "config.h"
-
 void runIncubator() {
     bool isIncubatorActive = getIncubatorStatus();
     debugMessage("Incubator is: " +
@@ -29,13 +21,10 @@ void runIncubator() {
     controlHeatElementMosfet(currentTemperature, targetTemperature);
     controlHumidityVentServo(currentHumidity, targetHumidity);
     controlTrayServo();
-    updateTFTDisplay();
+    // updateTFTDisplay();
 }
 
 void pauseSystem() {
-    tft.fillScreen(BLACK);
-    tft.setCursor(0, 0);
-    tft.print("SYSTEM PAUSED");
     digitalWrite(mosfetPin, OFF);
     ventServo.write(servoClosedPosition);
     debugMessage("System is Paused");
@@ -88,9 +77,7 @@ void controlHumidityVentServo(int currentHumidity, int targetHumidity) {
     debugMessage("Humidity Vent Servo controlled");
 }
 
-// Function to check if the specified number of milliseconds has passed
 bool hasIntervalPassed(unsigned long intervalMillis) {
-    // Declare a static variable to remember the last time we checked
     static unsigned long lastCheck = 0;
 
     unsigned long currentMillis = millis();

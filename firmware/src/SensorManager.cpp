@@ -1,8 +1,5 @@
 #include "SensorManager.h"
 
-#include "DebugManager.h"
-#include "config.h"
-
 void initializeSensors() {
     I2CBME.begin(BME_SDA, BME_SCL);
     if (!bme.begin(0x77, &I2CBME)) {

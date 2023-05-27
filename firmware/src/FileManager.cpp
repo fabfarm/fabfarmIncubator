@@ -1,19 +1,10 @@
 #include "FileManager.h"
 
-#include "DebugManager.h"
-#include "DisplayManager.h"
-#include "WebServerManager.h"
-
 void initializeStorage() {
     if (!SPIFFS.begin(true)) {
         debugMessage("An Error has occurred while mounting SPIFFS");
-        displayError("Error mounting SPIFFS");
         return;
     }
-    tft.setCursor(0, 0);
-    tft.setTextColor(TFT_WHITE);
-    tft.setTextSize(2);
-    tft.println("SPIFFS mounted successfully!");
     debugMessage("SPIFFS mounted successfully!");
 }
 

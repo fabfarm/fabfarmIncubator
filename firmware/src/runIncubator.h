@@ -1,6 +1,15 @@
 #ifndef RUN_INCUBATOR_h
 #define RUN_INCUBATOR_h
 
+#include "config.h"
+
+#include "DebugManager.h"
+#include "DisplayManager.h"
+#include "FileManager.h"
+#include "SensorManager.h"
+#include "ServoManager.h"
+#include "WebServerManager.h"
+
 void runIncubator();
 
 void controlHumidityVentServo(int currentHumidity, int targetHumidity);

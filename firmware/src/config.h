@@ -17,15 +17,13 @@
 #include <Wire.h>
 #include <math.h>
 
-#include "NotoSansBold15.h"
+
+// #include "NotoSansBold15.h"
 
 #define BME_SDA BMESdaPin
 #define BME_SCL BMESclPin
 #define ON LOW
 #define OFF HIGH
-#define BLACK 0x0000
-#define WHITE 0xFFFF
-#define RED 0xF800
 #define hysteresis 0.2  // degrees Celsius
 #define TRIGGER_PIN 0
 
@@ -61,10 +59,6 @@ extern AsyncWebServer server;
 
 extern Servo ventServo;
 extern Servo trayServo;
-
-extern TFT_eSPI tft;
-extern int16_t  displayHeight;
-extern int16_t  displayWidth;
 
 extern PID    tempPID;
 extern PID    humPID;

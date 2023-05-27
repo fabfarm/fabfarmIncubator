@@ -16,7 +16,7 @@ void setup() {
     Serial.begin(115200);
     pinMode(mosfetPin, OUTPUT);
     setupPidControllers();
-    initializeTFTDisplay();
+    // initializeTFTDisplay();
     initializeStorage();
     connectServos();
     loadSettings();

@@ -1,13 +1,11 @@
 #ifndef WEB_SERVER_MANAGER_H
 #define WEB_SERVER_MANAGER_H
 
+#include "config.h"
+
 #include "DebugManager.h"
 #include "DisplayManager.h"
 #include "FileManager.h"
-#include "SensorManager.h"
-#include "config.h"
-
-// Function prototypes
 
 bool getIncubatorStatus();
 void loadSettings();

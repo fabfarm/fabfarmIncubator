@@ -6,7 +6,7 @@
 # 2nd - run this in powershell to connect device: `usbipd wsl attach -b <INSERT-BUSID-HERE> -d Ubuntu`
 
 # this needs to be run in the shell script, make sure you have pip installed
-pip3 install esptool
+pipx install esptool
 
 while true; do
   # run PlatformIO build for T-QT-Pro-N4R2 environment

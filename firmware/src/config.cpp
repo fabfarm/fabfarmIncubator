@@ -39,9 +39,6 @@ AsyncWebServer server(80);
 
 Servo    ventServo;
 Servo    trayServo;
-TFT_eSPI tft           = TFT_eSPI();
-int16_t  displayHeight = 128;
-int16_t  displayWidth  = 160;
 
 double tempSetpoint = 0, tempInput = 0, tempOutput = 0;
 double humSetpoint = 0, humInput = 0, humOutput = 0;

@@ -4,6 +4,10 @@
 #include <Arduino.h>
 #include <FS.h>
 
+#include "DebugManager.h"
+#include "DisplayManager.h"
+#include "WebServerManager.h"
+
 void initializeStorage();
 
 void writeToFile(const char *fileName, const String &content,
