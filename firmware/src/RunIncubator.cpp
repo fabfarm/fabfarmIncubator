@@ -34,7 +34,7 @@ void runIncubator() {
     // if (hasIntervalPassed(timeIntervalToPrintNumber, lastPrintNumberCounter)) {
     //     tft.drawString(String(number), 30, 86, 7);
     //     number++;
-    }
+    // }
 
     controlHeatElementMosfet(targetTemperature);
     controlHumidityVentServo(targetHumidity);
