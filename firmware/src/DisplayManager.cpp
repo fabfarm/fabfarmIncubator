@@ -15,27 +15,24 @@ void initializeTFTDisplay() {
 }
 
 void updateTFTDisplay() {
-    if (hasIntervalPassed(timeIntervalToRenewTftData)) {
-        currentTemperature = bme.readTemperature();
-        currentHumidity    = bme.readHumidity();
-        currentPressure    = bme.readPressure() / 100.0F;
-        tft.drawString("T: " + String(currentTemperature, 2) + " °C", 5, 5);
-        tft.drawString("H: " + String(currentHumidity, 0) + " %", 5, 20);
-        tft.drawString("P: " + String(currentPressure, 0) + " hPa", 5, 35);
-        // print sensor readings to serial monitor with debugMessage()
-        debugMessage("Temperature: " + String(currentTemperature, 2) + " °C");
-        debugMessage("Humidity: " + String(currentHumidity, 2) + " %");
-        debugMessage("Pressure: " + String(currentPressure, 2) + " hPa");
+    currentTemperature = bme.readTemperature();
+    currentHumidity    = bme.readHumidity();
+    currentPressure    = bme.readPressure() / 100.0F;
+    tft.drawString("T: " + String(currentTemperature, 2) + " °C", 5, 5);
+    tft.drawString("H: " + String(currentHumidity, 0) + " %", 5, 20);
+    tft.drawString("P: " + String(currentPressure, 0) + " hPa", 5, 35);
+    // print sensor readings to serial monitor with debugMessage()
+    debugMessage("Temperature: " + String(currentTemperature, 2) + " °C");
+    debugMessage("Humidity: " + String(currentHumidity, 2) + " %");
+    debugMessage("Pressure: " + String(currentPressure, 2) + " hPa");
 
-        tft.drawLine(0, 48, 128, 48, TFT_BLACK);
+    tft.drawLine(0, 48, 128, 48, TFT_BLACK);
 
-        // drawString targetTemperature and targetHumidity
-        tft.drawString("Set T: " + String(targetTemperature, 2) + " °C", 5, 50);
-        tft.drawString("Set H: " + String(targetHumidity, 0) + " %", 5, 65);
-        // print targetTemperature and targetHumidity to serial monitor with
-        // debugMessage()
-        debugMessage("Target Temperature: " + String(targetTemperature, 2) +
-                     " °C");
-        debugMessage("Target Humidity: " + String(targetHumidity, 0) + " %");
-    }
+    // drawString targetTemperature and targetHumidity
+    tft.drawString("Set T: " + String(targetTemperature, 2) + " °C", 5, 50);
+    tft.drawString("Set H: " + String(targetHumidity, 0) + " %", 5, 65);
+    // print targetTemperature and targetHumidity to serial monitor with
+    // debugMessage()
+    debugMessage("Target Temperature: " + String(targetTemperature, 2) + " °C");
+    debugMessage("Target Humidity: " + String(targetHumidity, 0) + " %");
 }

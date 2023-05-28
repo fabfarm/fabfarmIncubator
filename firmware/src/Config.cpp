@@ -11,8 +11,6 @@ float targetHumidity        = 0.0;
 float trayServoTurnInterval = 0;
 float trayServoTurnAngle    = 0;
 
-// timeIntervalToSaveData
-
 unsigned long timeIntervalToSaveData = 20000;
 unsigned long timeIntervalToRenewTftData = 10000;
 

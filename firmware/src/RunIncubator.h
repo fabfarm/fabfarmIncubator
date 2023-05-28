@@ -14,7 +14,7 @@ void runIncubator();
 
 void controlHumidityVentServo(int targetHumidity);
 void controlHeatElementMosfet(float targetTemperature);
-bool hasIntervalPassed(unsigned long intervalMillis);
+bool hasIntervalPassed(unsigned long intervalMillis, unsigned long &lastCheck);
 void pauseSystem();
 void saveData();
 bool getIncubatorStatus();

@@ -1,17 +1,26 @@
 #include "RunIncubator.h"
 
 void runIncubator() {
-    static bool previousIncubatorStatus = false;
-    bool currentIncubatorStatus = getIncubatorStatus();
+    static unsigned long lastCheckSaveData       = 0;
+    static unsigned long lastCheckRenewTftData   = 0;
+    static bool          previousIncubatorStatus = false;
+    bool                 currentIncubatorStatus  = getIncubatorStatus();
 
     if (currentIncubatorStatus != previousIncubatorStatus) {
         debugMessage("Incubator status has changed: " +
                      String(currentIncubatorStatus ? "active" : "not active"));
+        tft.fillScreen(TFT_WHITE);
+        tft.setTextColor(TFT_BLACK, TFT_WHITE);
         previousIncubatorStatus = currentIncubatorStatus;
+
     }
 
-    if (hasIntervalPassed(timeIntervalToSaveData)) {
+    if (hasIntervalPassed(timeIntervalToSaveData, lastCheckSaveData)) {
         saveData();
+    }
+
+    if (hasIntervalPassed(timeIntervalToRenewTftData, lastCheckRenewTftData)) {
+        updateTFTDisplay();
     }
 
     if (!currentIncubatorStatus) {
@@ -24,12 +33,13 @@ void runIncubator() {
     controlTrayServo();
 }
 
-
-
 void pauseSystem() {
     digitalWrite(mosfetPin, OFF);
     ventServo.write(servoClosedPosition);
     debugMessage("System is Paused");
+    tft.fillScreen(TFT_RED);
+    tft.setTextColor(TFT_BLACK, TFT_RED);
+    tft.drawString("SYSTEM IS PAUSED", 5, 5);
 }
 
 void saveData() {
@@ -37,6 +47,8 @@ void saveData() {
                 String(millis()) + "," + String(bme.readTemperature()) + "," +
                     String(bme.readHumidity()) + "   ",
                 true);
+    debugMessage("Data saved");
+    debugMessage(readFromFile("/data.txt"));
 }
 
 void controlHeatElementMosfet(float targetTemperature) {
@@ -44,7 +56,7 @@ void controlHeatElementMosfet(float targetTemperature) {
     tempSetpoint = targetTemperature;
     tempPID.Compute();
     digitalWrite(mosfetPin, tempOutput > 0.5 ? ON : OFF);
-    //debugMessage("Heat Element Mosfet controlled");
+    // debugMessage("Heat Element Mosfet controlled");
 }
 
 void controlHumidityVentServo(int targetHumidity) {
@@ -53,12 +65,10 @@ void controlHumidityVentServo(int targetHumidity) {
     humPID.Compute();
     int servoPosition = servoClosedPosition - humOutput;
     ventServo.write(servoPosition);
-    //debugMessage("Humidity Vent Servo controlled");
+    // debugMessage("Humidity Vent Servo controlled");
 }
 
-bool hasIntervalPassed(unsigned long intervalMillis) {
-    static unsigned long lastCheck = 0;
-
+bool hasIntervalPassed(unsigned long intervalMillis, unsigned long &lastCheck) {
     unsigned long currentMillis = millis();
     if (currentMillis - lastCheck >= intervalMillis) {
         lastCheck = currentMillis;
