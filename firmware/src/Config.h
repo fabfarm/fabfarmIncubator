@@ -16,8 +16,10 @@
 #include <SPI.h>
 #include <Wire.h>
 #include <math.h>
+#include "NotoSansBold15.h"
 
 extern TFT_eSPI tft;
+
 
 #define BME_SDA BMESdaPin
 #define BME_SCL BMESclPin
@@ -27,11 +29,14 @@ extern TFT_eSPI tft;
 #define TRIGGER_PIN 0
 
 extern bool      debugMode;
+extern float       currentHumidity;
 extern float     currentPressure;
+extern float     currentTemperature;
 extern float     targetTemperature;
 extern int       targetHumidity;
 extern float     trayServoTurnInterval;
 extern float     trayServoTurnAngle;
+
 
 // timeIntervalToSaveData
 extern unsigned long timeIntervalToSaveData;

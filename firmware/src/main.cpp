@@ -29,4 +29,5 @@ void loop() {
     // tft.fillScreen(TFT_WHITE);
     wifiManagerLoop();
     runIncubator();
+    updateTFTDisplay();
 }
