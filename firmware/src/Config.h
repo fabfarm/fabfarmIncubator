@@ -16,7 +16,6 @@
 #include <SPI.h>
 #include <Wire.h>
 #include <math.h>
-#include "NotoSansBold15.h"
 
 extern TFT_eSPI tft;
 
@@ -25,7 +24,6 @@ extern TFT_eSPI tft;
 #define BME_SCL BMESclPin
 #define ON LOW
 #define OFF HIGH
-#define hysteresis 0.2  // degrees Celsius
 #define TRIGGER_PIN 0
 
 extern bool      debugMode;

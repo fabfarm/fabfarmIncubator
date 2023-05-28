@@ -1,10 +1,14 @@
 #include "RunIncubator.h"
 
+int number = 0;
+
 void runIncubator() {
-    static unsigned long lastCheckSaveData       = 0;
-    static unsigned long lastCheckRenewTftData   = 0;
-    static bool          previousIncubatorStatus = false;
-    bool                 currentIncubatorStatus  = getIncubatorStatus();
+    static unsigned long lastCheckSaveData         = 0;
+    static unsigned long lastCheckRenewTftData     = 0;
+    static unsigned long lastPrintNumberCounter    = 0;
+    static unsigned long timeIntervalToPrintNumber = 1000;
+    static bool          previousIncubatorStatus   = false;
+    bool                 currentIncubatorStatus    = getIncubatorStatus();
 
     if (currentIncubatorStatus != previousIncubatorStatus) {
         debugMessage("Incubator status has changed: " +
@@ -12,7 +16,6 @@ void runIncubator() {
         tft.fillScreen(TFT_WHITE);
         tft.setTextColor(TFT_BLACK, TFT_WHITE);
         previousIncubatorStatus = currentIncubatorStatus;
-
     }
 
     if (hasIntervalPassed(timeIntervalToSaveData, lastCheckSaveData)) {
@@ -27,6 +30,11 @@ void runIncubator() {
         pauseSystem();
         return;
     }
+    // uncomment this to print number counter on the screen
+    // if (hasIntervalPassed(timeIntervalToPrintNumber, lastPrintNumberCounter)) {
+    //     tft.drawString(String(number), 30, 86, 7);
+    //     number++;
+    }
 
     controlHeatElementMosfet(targetTemperature);
     controlHumidityVentServo(targetHumidity);
@@ -38,8 +46,7 @@ void pauseSystem() {
     ventServo.write(servoClosedPosition);
     debugMessage("System is Paused");
     tft.fillScreen(TFT_RED);
-    tft.setTextColor(TFT_BLACK, TFT_RED);
-    tft.drawString("SYSTEM IS PAUSED", 5, 5);
+    tft.drawString("SYSTEM IS PAUSED", 5, 5, 7);
 }
 
 void saveData() {
@@ -48,7 +55,7 @@ void saveData() {
                     String(bme.readHumidity()) + "   ",
                 true);
     debugMessage("Data saved");
-    debugMessage(readFromFile("/data.txt"));
+    // debugMessage(readFromFile("/data.txt"));
 }
 
 void controlHeatElementMosfet(float targetTemperature) {

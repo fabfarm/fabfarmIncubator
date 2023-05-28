@@ -8,7 +8,6 @@
 #include "DebugManager.h"
 #include "RunIncubator.h"
 
-#define notoFont NotoSansBold15
 
 void initializeTFTDisplay();
 void updateTFTDisplay();
