@@ -29,7 +29,7 @@ extern TFT_eSPI tft;
 #define TRIGGER_PIN 0
 
 extern bool      debugMode;
-extern float       currentHumidity;
+extern float     currentHumidity;
 extern float     currentPressure;
 extern float     currentTemperature;
 extern float     targetTemperature;
@@ -40,6 +40,7 @@ extern float     trayServoTurnAngle;
 
 // timeIntervalToSaveData
 extern unsigned long timeIntervalToSaveData;
+extern unsigned long timeIntervalToRenewTftData;
 
 extern const int mosfetPin;
 extern const int humidityVentServoPin;

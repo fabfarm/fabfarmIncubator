@@ -12,7 +12,10 @@ float trayServoTurnInterval = 0;
 float trayServoTurnAngle    = 0;
 
 // timeIntervalToSaveData
+
 unsigned long timeIntervalToSaveData = 20000;
+unsigned long timeIntervalToRenewTftData = 10000;
+
 
 const int mosfetPin            = 16;
 const int humidityVentServoPin = 37;
