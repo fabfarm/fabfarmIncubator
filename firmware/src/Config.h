@@ -33,7 +33,7 @@ extern float     currentHumidity;
 extern float     currentPressure;
 extern float     currentTemperature;
 extern float     targetTemperature;
-extern int       targetHumidity;
+extern float     targetHumidity;
 extern float     trayServoTurnInterval;
 extern float     trayServoTurnAngle;
 
