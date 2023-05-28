@@ -26,5 +26,16 @@ void updateTFTDisplay() {
         debugMessage("Temperature: " + String(currentTemperature, 2) + " °C");
         debugMessage("Humidity: " + String(currentHumidity, 2) + " %");
         debugMessage("Pressure: " + String(currentPressure, 2) + " hPa");
+
+        tft.drawLine(0, 48, 128, 48, TFT_BLACK);
+
+        // drawString targetTemperature and targetHumidity
+        tft.drawString("Set T: " + String(targetTemperature, 2) + " °C", 5, 50);
+        tft.drawString("Set H: " + String(targetHumidity, 0) + " %", 5, 65);
+        // print targetTemperature and targetHumidity to serial monitor with
+        // debugMessage()
+        debugMessage("Target Temperature: " + String(targetTemperature, 2) +
+                     " °C");
+        debugMessage("Target Humidity: " + String(targetHumidity, 0) + " %");
     }
 }

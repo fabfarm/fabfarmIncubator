@@ -3,11 +3,11 @@
 TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
 
 bool  debugMode             = true;
-float currentHumidity       = 0;
+float currentHumidity       = 0.0;
 float currentPressure       = 0.0;
 float currentTemperature    = 0.0;
 float targetTemperature     = 0.0;
-int   targetHumidity        = 0;
+float targetHumidity        = 0.0;
 float trayServoTurnInterval = 0;
 float trayServoTurnAngle    = 0;
 
