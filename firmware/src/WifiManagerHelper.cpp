@@ -114,7 +114,7 @@ void checkButton() {
             Serial.println("Starting config portal");
             wm.setConfigPortalTimeout(120);
 
-            if (!wm.startConfigPortal("OnDemandAP", "password")) {
+            if (!wm.startConfigPortal("OnDemandAP")) {
                 Serial.println("failed to connect or hit timeout");
                 delay(3000);
                 // ESP.restart();

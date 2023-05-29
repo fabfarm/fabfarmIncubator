@@ -31,7 +31,8 @@ void runIncubator() {
         return;
     }
     // uncomment this to print number counter on the screen
-    // if (hasIntervalPassed(timeIntervalToPrintNumber, lastPrintNumberCounter)) {
+    // if (hasIntervalPassed(timeIntervalToPrintNumber, lastPrintNumberCounter))
+    // {
     //     tft.drawString(String(number), 30, 86, 7);
     //     number++;
     // }
@@ -46,7 +47,9 @@ void pauseSystem() {
     ventServo.write(servoClosedPosition);
     debugMessage("System is Paused");
     tft.fillScreen(TFT_RED);
-    tft.drawString("SYSTEM IS PAUSED", 5, 5, 7);
+    // tft.setTextColor(TFT_BLACK, TFT_RED, 1);
+    // tft.drawString("SYSTEM IS PAUSED", 60, 60, 7);
+    // delay(10000);
 }
 
 void saveData() {
